@@ -347,7 +347,7 @@
             };
 
             const filtered = allMarkets.filter(market => {
-                // Binary markets only
+                // Binary markets only (exclude multi-outcome negRisk markets)
                 try {
                     const outcomes = JSON.parse(market.outcomes || '[]');
                     if (outcomes.length !== 2) { stats.notBinary++; return false; }
@@ -355,6 +355,9 @@
                     stats.notBinary++;
                     return false;
                 }
+
+                // Exclude negRisk markets (multi-outcome like Grammy winners)
+                if (market.negRisk === true) { stats.notBinary++; return false; }
 
                 // Check expiry
                 if (!market.endDate) { stats.noExpiry++; return false; }
