@@ -5,8 +5,10 @@ const path = require('path');
 const PORT = 3001;
 
 const server = http.createServer(async (req, res) => {
-    // API proxy endpoint - fetch all markets with pagination
-    if (req.url === '/api/markets') {
+    const url = new URL(req.url, `http://localhost:${PORT}`);
+
+    // API proxy endpoint - fetch all active markets with pagination
+    if (url.pathname === '/api/markets') {
         try {
             const GAMMA_API = 'https://gamma-api.polymarket.com/markets?closed=false&active=true&limit=500';
 
@@ -25,6 +27,44 @@ const server = http.createServer(async (req, res) => {
 
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify(uniqueMarkets));
+        } catch (error) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: error.message }));
+        }
+        return;
+    }
+
+    // API proxy for closed markets (backtest)
+    if (url.pathname === '/api/closed-markets') {
+        try {
+            const GAMMA_API = 'https://gamma-api.polymarket.com/markets?closed=true&limit=500&end_date_min=2024-01-01';
+            const response = await fetch(GAMMA_API);
+            const markets = await response.json();
+
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(markets));
+        } catch (error) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: error.message }));
+        }
+        return;
+    }
+
+    // API proxy for price history (backtest)
+    if (url.pathname === '/api/price-history') {
+        const tokenId = url.searchParams.get('tokenId');
+        if (!tokenId) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'tokenId is required' }));
+            return;
+        }
+        try {
+            const CLOB_API = `https://clob.polymarket.com/prices-history?market=${tokenId}&interval=max&fidelity=1440`;
+            const response = await fetch(CLOB_API);
+            const data = await response.json();
+
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(data));
         } catch (error) {
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ error: error.message }));

@@ -751,11 +751,10 @@
         });
 
         // ========== BACKTEST FUNCTIONALITY ==========
-        const GAMMA_API = 'https://gamma-api.polymarket.com';
-        const CLOB_API = 'https://clob.polymarket.com';
-
+        // Use proxy APIs to avoid CORS issues
         async function fetchClosedMarkets(minVolume) {
-            const response = await fetch(`${GAMMA_API}/markets?closed=true&limit=500&end_date_min=2024-01-01`);
+            const response = await fetch('/api/closed-markets');
+            if (!response.ok) throw new Error('Failed to fetch closed markets');
             const markets = await response.json();
 
             return markets.filter(m => {
@@ -769,7 +768,8 @@
 
         async function fetchPriceHistory(tokenId) {
             try {
-                const response = await fetch(`${CLOB_API}/prices-history?market=${tokenId}&interval=max&fidelity=1440`);
+                const response = await fetch(`/api/price-history?tokenId=${tokenId}`);
+                if (!response.ok) return [];
                 const data = await response.json();
                 return data.history || [];
             } catch (e) {
