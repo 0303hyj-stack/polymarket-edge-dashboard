@@ -221,6 +221,119 @@
             padding: 60px;
             color: #888;
         }
+
+        /* Tab Navigation */
+        .tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 24px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: #888;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab:hover {
+            color: #111;
+        }
+
+        .tab.active {
+            color: #2563eb;
+            border-bottom-color: #2563eb;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Backtest Styles */
+        .backtest-summary {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .summary-card {
+            background: #f8f8f8;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .summary-card.win {
+            background: #ecfdf5;
+        }
+
+        .summary-card.loss {
+            background: #fef2f2;
+        }
+
+        .summary-card .value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #111;
+        }
+
+        .summary-card.win .value {
+            color: #059669;
+        }
+
+        .summary-card.loss .value {
+            color: #dc2626;
+        }
+
+        .summary-card .label {
+            font-size: 0.7rem;
+            color: #666;
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+
+        .backtest-filters {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 20px;
+            align-items: flex-end;
+        }
+
+        .result-win {
+            color: #059669;
+            font-weight: 600;
+        }
+
+        .result-loss {
+            color: #dc2626;
+            font-weight: 600;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #eee;
+            border-radius: 2px;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+
+        .progress-bar .fill {
+            height: 100%;
+            background: #2563eb;
+            transition: width 0.3s;
+        }
     </style>
 </head>
 <body>
@@ -230,6 +343,14 @@
             <p class="subtitle">Markets with ≤1% time remaining and mid price around 50 cents (YES ≈ NO)</p>
         </header>
 
+        <!-- Tab Navigation -->
+        <div class="tabs">
+            <button class="tab active" data-tab="live">Live Markets</button>
+            <button class="tab" data-tab="backtest">Backtest History</button>
+        </div>
+
+        <!-- Live Markets Tab -->
+        <div id="liveTab" class="tab-content active">
         <div class="filters">
             <div class="filter-group">
                 <label>Time Remaining</label>
@@ -277,6 +398,64 @@
                 <p>Loading markets...</p>
             </div>
         </div>
+        </div><!-- End Live Tab -->
+
+        <!-- Backtest Tab -->
+        <div id="backtestTab" class="tab-content">
+            <div class="backtest-filters">
+                <div class="filter-group">
+                    <label>Price Range</label>
+                    <select id="btPriceRange">
+                        <option value="2">48-52¢ (tight)</option>
+                        <option value="5" selected>45-55¢ (medium)</option>
+                        <option value="10">40-60¢ (wide)</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Near Expiry Only</label>
+                    <select id="btNearExpiry">
+                        <option value="0">All 50¢ moments</option>
+                        <option value="5" selected>Within 5% of expiry</option>
+                        <option value="1">Within 1% of expiry</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Min Volume</label>
+                    <input type="number" id="btMinVolume" value="10000" min="0" style="width: 100px;">
+                </div>
+                <button class="refresh-btn" id="runBacktestBtn">Run Backtest</button>
+            </div>
+
+            <div class="progress-bar" id="btProgress" style="display: none;">
+                <div class="fill" style="width: 0%"></div>
+            </div>
+
+            <div class="backtest-summary" id="btSummary" style="display: none;">
+                <div class="summary-card">
+                    <div class="value" id="btTotal">-</div>
+                    <div class="label">Markets Analyzed</div>
+                </div>
+                <div class="summary-card win">
+                    <div class="value" id="btWinRate">-</div>
+                    <div class="label">Win Rate</div>
+                </div>
+                <div class="summary-card loss">
+                    <div class="value" id="btAvgProfit">-</div>
+                    <div class="label">Avg Profit/Trade</div>
+                </div>
+                <div class="summary-card">
+                    <div class="value" id="btEdge">-</div>
+                    <div class="label">Edge vs 50/50</div>
+                </div>
+            </div>
+
+            <div id="backtestContainer">
+                <div class="no-results">
+                    <p>Click "Run Backtest" to analyze historical markets</p>
+                    <p style="margin-top: 8px; font-size: 0.85rem;">This fetches resolved markets from 2024+ and checks 50¢ strategy performance</p>
+                </div>
+            </div>
+        </div><!-- End Backtest Tab -->
     </div>
 
     <script>
@@ -560,6 +739,222 @@
         ['maxPercent', 'priceRange', 'minVolume'].forEach(id => {
             document.getElementById(id).addEventListener('change', filterAndDisplayMarkets);
         });
+
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab + 'Tab').classList.add('active');
+            });
+        });
+
+        // ========== BACKTEST FUNCTIONALITY ==========
+        const GAMMA_API = 'https://gamma-api.polymarket.com';
+        const CLOB_API = 'https://clob.polymarket.com';
+
+        async function fetchClosedMarkets(minVolume) {
+            const response = await fetch(`${GAMMA_API}/markets?closed=true&limit=500&end_date_min=2024-01-01`);
+            const markets = await response.json();
+
+            return markets.filter(m => {
+                const vol = parseFloat(m.volume) || 0;
+                const outcomes = JSON.parse(m.outcomes || '[]');
+                const prices = JSON.parse(m.outcomePrices || '[]');
+                const hasResolution = prices.length === 2 && (prices[0] === '1' || prices[0] === '0');
+                return vol >= minVolume && outcomes.length === 2 && hasResolution && !m.negRisk;
+            });
+        }
+
+        async function fetchPriceHistory(tokenId) {
+            try {
+                const response = await fetch(`${CLOB_API}/prices-history?market=${tokenId}&interval=max&fidelity=1440`);
+                const data = await response.json();
+                return data.history || [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        async function runBacktest() {
+            const container = document.getElementById('backtestContainer');
+            const summary = document.getElementById('btSummary');
+            const progressBar = document.getElementById('btProgress');
+            const btn = document.getElementById('runBacktestBtn');
+
+            const priceRange = parseInt(document.getElementById('btPriceRange').value);
+            const nearExpiryPercent = parseInt(document.getElementById('btNearExpiry').value);
+            const minVolume = parseFloat(document.getElementById('btMinVolume').value) || 0;
+
+            const priceMin = (50 - priceRange) / 100;
+            const priceMax = (50 + priceRange) / 100;
+
+            btn.disabled = true;
+            btn.textContent = 'Loading markets...';
+            progressBar.style.display = 'block';
+            summary.style.display = 'none';
+
+            container.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Fetching closed markets...</p>
+                </div>
+            `;
+
+            try {
+                const markets = await fetchClosedMarkets(minVolume);
+                container.querySelector('p').textContent = `Found ${markets.length} resolved markets. Analyzing...`;
+
+                const results = [];
+                let processed = 0;
+
+                for (const market of markets.slice(0, 200)) {
+                    const tokens = JSON.parse(market.clobTokenIds || '[]');
+                    if (!tokens[0] || !market.endDate || !market.startDate) continue;
+
+                    const history = await fetchPriceHistory(tokens[0]);
+                    if (history.length === 0) continue;
+
+                    const finalPrices = JSON.parse(market.outcomePrices || '[]');
+                    const yesResolved = parseFloat(finalPrices[0]) === 1;
+
+                    const startDate = new Date(market.startDate);
+                    const endDate = new Date(market.endDate);
+                    const totalDuration = endDate - startDate;
+
+                    // Find 50¢ moments based on filter
+                    let near50;
+                    if (nearExpiryPercent > 0) {
+                        near50 = history.filter(h => {
+                            if (h.p < priceMin || h.p > priceMax) return false;
+                            const timestamp = new Date(h.t * 1000);
+                            const timeLeft = endDate - timestamp;
+                            const percentRemaining = (timeLeft / totalDuration) * 100;
+                            return percentRemaining >= 0 && percentRemaining <= nearExpiryPercent;
+                        });
+                    } else {
+                        near50 = history.filter(h => h.p >= priceMin && h.p <= priceMax);
+                    }
+
+                    if (near50.length > 0) {
+                        const entryPrice = near50[0].p;
+                        const exitPrice = yesResolved ? 1 : 0;
+                        const profit = ((exitPrice - entryPrice) / entryPrice * 100);
+
+                        const entryDate = new Date(near50[0].t * 1000);
+                        const daysToExpiry = (endDate - entryDate) / (1000 * 60 * 60 * 24);
+
+                        results.push({
+                            question: market.question,
+                            volume: parseFloat(market.volume),
+                            entryPrice: entryPrice * 100,
+                            resolution: yesResolved ? 'YES' : 'NO',
+                            profit: profit,
+                            daysToExpiry: daysToExpiry,
+                            closedDate: market.closedTime ? market.closedTime.split('T')[0] : 'N/A'
+                        });
+                    }
+
+                    processed++;
+                    const progress = (processed / Math.min(markets.length, 200)) * 100;
+                    progressBar.querySelector('.fill').style.width = progress + '%';
+
+                    if (processed % 5 === 0) {
+                        container.querySelector('p').textContent = `Analyzed ${processed}/${Math.min(markets.length, 200)} markets...`;
+                    }
+
+                    await new Promise(r => setTimeout(r, 50));
+                }
+
+                displayBacktestResults(results);
+
+            } catch (error) {
+                container.innerHTML = `
+                    <div class="no-results">
+                        <p>Error: ${error.message}</p>
+                    </div>
+                `;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Run Backtest';
+                progressBar.style.display = 'none';
+            }
+        }
+
+        function displayBacktestResults(results) {
+            const container = document.getElementById('backtestContainer');
+            const summary = document.getElementById('btSummary');
+
+            if (results.length === 0) {
+                summary.style.display = 'none';
+                container.innerHTML = `
+                    <div class="no-results">
+                        <p>No markets found matching criteria</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Calculate stats
+            const wins = results.filter(r => r.profit > 0);
+            const losses = results.filter(r => r.profit < 0);
+            const totalProfit = results.reduce((sum, r) => sum + r.profit, 0);
+            const avgProfit = totalProfit / results.length;
+            const winRate = (wins.length / results.length) * 100;
+
+            // Update summary cards
+            summary.style.display = 'grid';
+            document.getElementById('btTotal').textContent = results.length;
+            document.getElementById('btWinRate').textContent = winRate.toFixed(1) + '%';
+            document.getElementById('btAvgProfit').textContent = (avgProfit >= 0 ? '+' : '') + avgProfit.toFixed(1) + '%';
+            document.getElementById('btEdge').textContent = (avgProfit >= 0 ? '+' : '') + avgProfit.toFixed(1) + '%';
+
+            // Update card colors based on results
+            const avgCard = document.getElementById('btAvgProfit').parentElement;
+            const edgeCard = document.getElementById('btEdge').parentElement;
+            avgCard.className = 'summary-card ' + (avgProfit >= 0 ? 'win' : 'loss');
+            edgeCard.className = 'summary-card ' + (avgProfit >= 0 ? 'win' : 'loss');
+
+            // Sort by volume
+            results.sort((a, b) => b.volume - a.volume);
+
+            // Display table
+            container.innerHTML = `
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Market</th>
+                                <th>Entry</th>
+                                <th>Result</th>
+                                <th>P/L</th>
+                                <th>Days to Exp</th>
+                                <th>Volume</th>
+                                <th>Closed</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${results.map(r => `
+                                <tr>
+                                    <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${r.question}">
+                                        ${r.question.slice(0, 50)}${r.question.length > 50 ? '...' : ''}
+                                    </td>
+                                    <td class="price-cell">${r.entryPrice.toFixed(1)}¢</td>
+                                    <td class="${r.resolution === 'YES' ? 'result-win' : 'result-loss'}">${r.resolution}</td>
+                                    <td class="${r.profit >= 0 ? 'result-win' : 'result-loss'}">${r.profit >= 0 ? '+' : ''}${r.profit.toFixed(0)}%</td>
+                                    <td>${r.daysToExpiry.toFixed(1)}d</td>
+                                    <td>$${formatNumber(r.volume)}</td>
+                                    <td style="color: #888; font-size: 0.8rem;">${r.closedDate}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        document.getElementById('runBacktestBtn').addEventListener('click', runBacktest);
 
         // Initial load
         fetchMarkets();
