@@ -227,18 +227,16 @@
     <div class="container">
         <header>
             <h1>Polymarket Edge Dashboard</h1>
-            <p class="subtitle">Markets near expiry with mid price around 50 cents (YES ≈ NO)</p>
+            <p class="subtitle">Markets with ≤1% time remaining and mid price around 50 cents (YES ≈ NO)</p>
         </header>
 
         <div class="filters">
             <div class="filter-group">
-                <label>Expiry</label>
-                <select id="maxDays">
-                    <option value="3">3 days</option>
-                    <option value="7">7 days</option>
-                    <option value="14">14 days</option>
-                    <option value="30" selected>30 days</option>
-                    <option value="90">90 days</option>
+                <label>Time Remaining</label>
+                <select id="maxPercent">
+                    <option value="1" selected>≤1% of duration</option>
+                    <option value="5">≤5% of duration</option>
+                    <option value="10">≤10% of duration</option>
                 </select>
             </div>
             <div class="filter-group">
@@ -324,7 +322,7 @@
         }
 
         function filterAndDisplayMarkets() {
-            const maxDays = parseInt(document.getElementById('maxDays').value);
+            const maxPercent = parseInt(document.getElementById('maxPercent').value);
             const priceRange = parseInt(document.getElementById('priceRange').value);
             const minVolume = parseFloat(document.getElementById('minVolume').value) || 0;
 
@@ -359,11 +357,19 @@
                 // Exclude negRisk markets (multi-outcome like Grammy winners)
                 if (market.negRisk === true) { stats.notBinary++; return false; }
 
-                // Check expiry
+                // Check expiry - only show markets with less than 1% of total duration remaining
                 if (!market.endDate) { stats.noExpiry++; return false; }
+                if (!market.startDate) { stats.noExpiry++; return false; }
+                const startDate = new Date(market.startDate);
                 const endDate = new Date(market.endDate);
+                const totalDuration = endDate - startDate;
                 const daysLeft = (endDate - now) / (1000 * 60 * 60 * 24);
-                if (daysLeft <= 0 || daysLeft > maxDays) { stats.expiredOrTooFar++; return false; }
+                const timeLeft = endDate - now;
+
+                // Must be still active and within 1% of total duration
+                if (daysLeft <= 0) { stats.expiredOrTooFar++; return false; }
+                const percentRemaining = (timeLeft / totalDuration) * 100;
+                if (percentRemaining > maxPercent) { stats.expiredOrTooFar++; return false; }
 
                 // Get YES price from outcomePrices
                 let outcomePrices;
@@ -551,7 +557,7 @@
 
         // Event listeners
         document.getElementById('refreshBtn').addEventListener('click', fetchMarkets);
-        ['maxDays', 'priceRange', 'minVolume'].forEach(id => {
+        ['maxPercent', 'priceRange', 'minVolume'].forEach(id => {
             document.getElementById(id).addEventListener('change', filterAndDisplayMarkets);
         });
 
