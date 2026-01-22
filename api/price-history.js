@@ -12,14 +12,17 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { tokenId } = req.query;
+  const { tokenId, fidelity } = req.query;
 
   if (!tokenId) {
     return res.status(400).json({ error: 'tokenId is required' });
   }
 
+  // fidelity: 1 = ~10min, 60 = hourly, 1440 = daily
+  const fidelityValue = fidelity || '60'; // Default to hourly
+
   try {
-    const CLOB_API = `https://clob.polymarket.com/prices-history?market=${tokenId}&interval=max&fidelity=1440`;
+    const CLOB_API = `https://clob.polymarket.com/prices-history?market=${tokenId}&interval=max&fidelity=${fidelityValue}`;
     const response = await fetch(CLOB_API);
     const data = await response.json();
 

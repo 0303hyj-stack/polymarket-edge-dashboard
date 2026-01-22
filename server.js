@@ -41,10 +41,13 @@ const server = http.createServer(async (req, res) => {
             const today = new Date().toISOString().split('T')[0];
 
             const dateRanges = [
-                { min: '2024-06-01', max: today },
-                { min: '2024-01-01', max: '2024-05-31' },
-                { min: '2023-01-01', max: '2023-12-31' },
-                { min: '2022-01-01', max: '2022-12-31' },
+                { min: '2026-01-01', max: today },      // 2026 (current)
+                { min: '2025-07-01', max: '2025-12-31' }, // Late 2025
+                { min: '2025-01-01', max: '2025-06-30' }, // Early 2025
+                { min: '2024-07-01', max: '2024-12-31' }, // Late 2024
+                { min: '2024-01-01', max: '2024-06-30' }, // Early 2024
+                { min: '2023-01-01', max: '2023-12-31' }, // 2023
+                { min: '2022-01-01', max: '2022-12-31' }, // 2022
             ];
 
             const allPromises = [];
@@ -74,13 +77,14 @@ const server = http.createServer(async (req, res) => {
     // API proxy for price history (backtest)
     if (url.pathname === '/api/price-history') {
         const tokenId = url.searchParams.get('tokenId');
+        const fidelity = url.searchParams.get('fidelity') || '60'; // Default to hourly
         if (!tokenId) {
             res.writeHead(400, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ error: 'tokenId is required' }));
             return;
         }
         try {
-            const CLOB_API = `https://clob.polymarket.com/prices-history?market=${tokenId}&interval=max&fidelity=1440`;
+            const CLOB_API = `https://clob.polymarket.com/prices-history?market=${tokenId}&interval=max&fidelity=${fidelity}`;
             const response = await fetch(CLOB_API);
             const data = await response.json();
 

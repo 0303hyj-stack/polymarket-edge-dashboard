@@ -404,11 +404,11 @@
         <div id="backtestTab" class="tab-content">
             <div class="backtest-filters">
                 <div class="filter-group">
-                    <label>Price Range</label>
+                    <label>Entry Price</label>
                     <select id="btPriceRange">
-                        <option value="2" selected>48-52¢ (tight)</option>
-                        <option value="5">45-55¢ (medium)</option>
-                        <option value="10">40-60¢ (wide)</option>
+                        <option value="edge" selected>47-49¢ or 51-53¢ (edge)</option>
+                        <option value="48-52">48-52¢ (includes 50¢)</option>
+                        <option value="45-55">45-55¢ (wide)</option>
                     </select>
                 </div>
                 <div class="filter-group">
@@ -422,6 +422,14 @@
                 <div class="filter-group">
                     <label>Min Volume</label>
                     <input type="number" id="btMinVolume" value="10000" min="0" style="width: 100px;">
+                </div>
+                <div class="filter-group">
+                    <label>Data Resolution</label>
+                    <select id="btFidelity">
+                        <option value="60" selected>Hourly</option>
+                        <option value="1">~10 min</option>
+                        <option value="1440">Daily</option>
+                    </select>
                 </div>
                 <button class="refresh-btn" id="runBacktestBtn">Run Backtest</button>
             </div>
@@ -764,18 +772,22 @@
             if (!response.ok) throw new Error('Failed to fetch closed markets');
             const markets = await response.json();
 
-            return markets.filter(m => {
+            const filtered = markets.filter(m => {
                 const vol = parseFloat(m.volume) || 0;
                 const outcomes = JSON.parse(m.outcomes || '[]');
                 const prices = JSON.parse(m.outcomePrices || '[]');
                 const hasResolution = prices.length === 2 && (prices[0] === '1' || prices[0] === '0');
                 return vol >= minVolume && outcomes.length === 2 && hasResolution && !m.negRisk;
             });
+
+            // Sort by endDate (oldest first) to ensure 2024 markets are analyzed first
+            filtered.sort((a, b) => new Date(a.endDate) - new Date(b.endDate));
+            return filtered;
         }
 
-        async function fetchPriceHistory(tokenId) {
+        async function fetchPriceHistory(tokenId, fidelity = '60') {
             try {
-                const response = await fetch(`/api/price-history?tokenId=${tokenId}`);
+                const response = await fetch(`/api/price-history?tokenId=${tokenId}&fidelity=${fidelity}`);
                 if (!response.ok) return [];
                 const data = await response.json();
                 return data.history || [];
@@ -790,12 +802,24 @@
             const progressBar = document.getElementById('btProgress');
             const btn = document.getElementById('runBacktestBtn');
 
-            const priceRange = parseInt(document.getElementById('btPriceRange').value);
+            const priceRangeValue = document.getElementById('btPriceRange').value;
             const nearExpiryPercent = parseInt(document.getElementById('btNearExpiry').value);
             const minVolume = parseFloat(document.getElementById('btMinVolume').value) || 0;
+            const fidelity = document.getElementById('btFidelity').value;
 
-            const priceMin = (50 - priceRange) / 100;
-            const priceMax = (50 + priceRange) / 100;
+            // Price filter function based on selection
+            // "edge" = 47-49¢ or 51-53¢ (excludes 50¢ center where you can't actually buy)
+            // "48-52" = traditional 48-52¢ range
+            // "45-55" = wide range
+            function matchesPrice(p) {
+                if (priceRangeValue === 'edge') {
+                    return (p >= 0.47 && p <= 0.49) || (p >= 0.51 && p <= 0.53);
+                } else if (priceRangeValue === '48-52') {
+                    return p >= 0.48 && p <= 0.52;
+                } else { // 45-55
+                    return p >= 0.45 && p <= 0.55;
+                }
+            }
 
             btn.disabled = true;
             btn.textContent = 'Loading markets...';
@@ -811,7 +835,7 @@
 
             try {
                 const markets = await fetchClosedMarkets(minVolume);
-                const totalToAnalyze = Math.min(markets.length, 500);
+                const totalToAnalyze = Math.min(markets.length, 1500);
                 container.querySelector('p').textContent = `Found ${markets.length} resolved markets. Analyzing ${totalToAnalyze}...`;
 
                 const results = [];
@@ -823,7 +847,7 @@
                     const tokens = JSON.parse(market.clobTokenIds || '[]');
                     if (!tokens[0] || !market.endDate || !market.startDate) return null;
 
-                    const history = await fetchPriceHistory(tokens[0]);
+                    const history = await fetchPriceHistory(tokens[0], fidelity);
                     if (history.length === 0) return null;
 
                     const finalPrices = JSON.parse(market.outcomePrices || '[]');
@@ -836,14 +860,14 @@
                     let near50;
                     if (nearExpiryPercent > 0) {
                         near50 = history.filter(h => {
-                            if (h.p < priceMin || h.p > priceMax) return false;
+                            if (!matchesPrice(h.p)) return false;
                             const timestamp = new Date(h.t * 1000);
                             const timeLeft = endDate - timestamp;
                             const percentRemaining = (timeLeft / totalDuration) * 100;
                             return percentRemaining >= 0 && percentRemaining <= nearExpiryPercent;
                         });
                     } else {
-                        near50 = history.filter(h => h.p >= priceMin && h.p <= priceMax);
+                        near50 = history.filter(h => matchesPrice(h.p));
                     }
 
                     if (near50.length > 0) {
@@ -869,7 +893,7 @@
                 }
 
                 // Process in batches
-                const marketsToProcess = markets.slice(0, 500);
+                const marketsToProcess = markets.slice(0, 1500);
                 for (let i = 0; i < marketsToProcess.length; i += BATCH_SIZE) {
                     const batch = marketsToProcess.slice(i, i + BATCH_SIZE);
                     const batchResults = await Promise.all(batch.map(m => processMarket(m)));

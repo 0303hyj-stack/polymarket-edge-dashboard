@@ -19,8 +19,11 @@ export default async function handler(req, res) {
 
     // Fetch in date range chunks to get more recent data
     const dateRanges = [
-      { min: '2024-06-01', max: today },      // Most recent 6 months
-      { min: '2024-01-01', max: '2024-05-31' }, // Early 2024
+      { min: '2026-01-01', max: today },      // 2026 (current)
+      { min: '2025-07-01', max: '2025-12-31' }, // Late 2025
+      { min: '2025-01-01', max: '2025-06-30' }, // Early 2025
+      { min: '2024-07-01', max: '2024-12-31' }, // Late 2024
+      { min: '2024-01-01', max: '2024-06-30' }, // Early 2024
       { min: '2023-01-01', max: '2023-12-31' }, // 2023
       { min: '2022-01-01', max: '2022-12-31' }, // 2022
     ];
