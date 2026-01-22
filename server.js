@@ -37,7 +37,9 @@ const server = http.createServer(async (req, res) => {
     // API proxy for closed markets (backtest)
     if (url.pathname === '/api/closed-markets') {
         try {
-            const GAMMA_API = 'https://gamma-api.polymarket.com/markets?closed=true&limit=500&end_date_min=2020-01-01';
+            // Get today's date in YYYY-MM-DD format
+            const today = new Date().toISOString().split('T')[0];
+            const GAMMA_API = `https://gamma-api.polymarket.com/markets?closed=true&limit=500&end_date_min=2020-01-01&end_date_max=${today}`;
 
             // Fetch multiple pages in parallel (up to 10000 markets)
             const offsets = [];
