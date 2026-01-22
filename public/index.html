@@ -816,7 +816,7 @@
                 const results = [];
                 let processed = 0;
 
-                for (const market of markets.slice(0, 200)) {
+                for (const market of markets.slice(0, 500)) {
                     const tokens = JSON.parse(market.clobTokenIds || '[]');
                     if (!tokens[0] || !market.endDate || !market.startDate) continue;
 
@@ -871,11 +871,11 @@
                     }
 
                     processed++;
-                    const progress = (processed / Math.min(markets.length, 200)) * 100;
+                    const progress = (processed / Math.min(markets.length, 500)) * 100;
                     progressBar.querySelector('.fill').style.width = progress + '%';
 
                     if (processed % 5 === 0) {
-                        container.querySelector('p').textContent = `Analyzed ${processed}/${Math.min(markets.length, 200)} markets...`;
+                        container.querySelector('p').textContent = `Analyzed ${processed}/${Math.min(markets.length, 500)} markets...`;
                     }
 
                     await new Promise(r => setTimeout(r, 50));
