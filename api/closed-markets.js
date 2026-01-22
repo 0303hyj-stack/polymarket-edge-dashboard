@@ -13,18 +13,30 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Get today's date in YYYY-MM-DD format
+    // Fetch recent data first (2024+), then older data
+    // API returns oldest first, so we need multiple date ranges
     const today = new Date().toISOString().split('T')[0];
-    const GAMMA_API = `https://gamma-api.polymarket.com/markets?closed=true&limit=500&end_date_min=2020-01-01&end_date_max=${today}`;
 
-    // Fetch multiple pages in parallel (up to 10000 markets)
-    const offsets = [];
-    for (let i = 0; i < 20; i++) offsets.push(i * 500);
-    const promises = offsets.map(offset =>
-      fetch(`${GAMMA_API}&offset=${offset}`).then(r => r.json()).catch(() => [])
-    );
+    // Fetch in date range chunks to get more recent data
+    const dateRanges = [
+      { min: '2024-06-01', max: today },      // Most recent 6 months
+      { min: '2024-01-01', max: '2024-05-31' }, // Early 2024
+      { min: '2023-01-01', max: '2023-12-31' }, // 2023
+      { min: '2022-01-01', max: '2022-12-31' }, // 2022
+    ];
 
-    const results = await Promise.all(promises);
+    const allPromises = [];
+    for (const range of dateRanges) {
+      const baseUrl = `https://gamma-api.polymarket.com/markets?closed=true&limit=500&end_date_min=${range.min}&end_date_max=${range.max}`;
+      // Fetch 3 pages per range (1500 markets per range)
+      for (let offset = 0; offset < 1500; offset += 500) {
+        allPromises.push(
+          fetch(`${baseUrl}&offset=${offset}`).then(r => r.json()).catch(() => [])
+        );
+      }
+    }
+
+    const results = await Promise.all(allPromises);
     const allMarkets = results.flat();
 
     // Remove duplicates by id

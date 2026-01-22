@@ -37,21 +37,29 @@ const server = http.createServer(async (req, res) => {
     // API proxy for closed markets (backtest)
     if (url.pathname === '/api/closed-markets') {
         try {
-            // Get today's date in YYYY-MM-DD format
+            // Fetch recent data first (2024+), then older data
             const today = new Date().toISOString().split('T')[0];
-            const GAMMA_API = `https://gamma-api.polymarket.com/markets?closed=true&limit=500&end_date_min=2020-01-01&end_date_max=${today}`;
 
-            // Fetch multiple pages in parallel (up to 10000 markets)
-            const offsets = [];
-            for (let i = 0; i < 20; i++) offsets.push(i * 500);
-            const promises = offsets.map(offset =>
-                fetch(`${GAMMA_API}&offset=${offset}`).then(r => r.json()).catch(() => [])
-            );
+            const dateRanges = [
+                { min: '2024-06-01', max: today },
+                { min: '2024-01-01', max: '2024-05-31' },
+                { min: '2023-01-01', max: '2023-12-31' },
+                { min: '2022-01-01', max: '2022-12-31' },
+            ];
 
-            const results = await Promise.all(promises);
+            const allPromises = [];
+            for (const range of dateRanges) {
+                const baseUrl = `https://gamma-api.polymarket.com/markets?closed=true&limit=500&end_date_min=${range.min}&end_date_max=${range.max}`;
+                for (let offset = 0; offset < 1500; offset += 500) {
+                    allPromises.push(
+                        fetch(`${baseUrl}&offset=${offset}`).then(r => r.json()).catch(() => [])
+                    );
+                }
+            }
+
+            const results = await Promise.all(allPromises);
             const allMarkets = results.flat();
 
-            // Remove duplicates by id
             const uniqueMarkets = [...new Map(allMarkets.map(m => [m.id, m])).values()];
 
             res.writeHead(200, { 'Content-Type': 'application/json' });
