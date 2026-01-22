@@ -845,6 +845,12 @@
                         const entryDate = new Date(near50[0].t * 1000);
                         const daysToExpiry = (endDate - entryDate) / (1000 * 60 * 60 * 24);
 
+                        // Build market URL
+                        const eventSlug = market.events && market.events[0]
+                            ? market.events[0].slug
+                            : market.slug;
+                        const marketUrl = `https://polymarket.com/event/${eventSlug}`;
+
                         results.push({
                             question: market.question,
                             volume: parseFloat(market.volume),
@@ -852,7 +858,8 @@
                             resolution: yesResolved ? 'YES' : 'NO',
                             profit: profit,
                             daysToExpiry: daysToExpiry,
-                            closedDate: market.closedTime ? market.closedTime.split('T')[0] : 'N/A'
+                            closedDate: market.closedTime ? market.closedTime.split('T')[0] : 'N/A',
+                            url: marketUrl
                         });
                     }
 
@@ -938,7 +945,9 @@
                             ${results.map(r => `
                                 <tr>
                                     <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${r.question}">
-                                        ${r.question.slice(0, 50)}${r.question.length > 50 ? '...' : ''}
+                                        <a href="${r.url}" target="_blank" class="market-link">
+                                            ${r.question.slice(0, 50)}${r.question.length > 50 ? '...' : ''}
+                                        </a>
                                     </td>
                                     <td class="price-cell">${r.entryPrice.toFixed(1)}¢</td>
                                     <td class="${r.resolution === 'YES' ? 'result-win' : 'result-loss'}">${r.resolution}</td>
