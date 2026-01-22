@@ -741,12 +741,19 @@
         });
 
         // Tab switching
+        let backtestLoaded = false;
         document.querySelectorAll('.tab').forEach(tab => {
             tab.addEventListener('click', () => {
                 document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
                 document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
                 tab.classList.add('active');
                 document.getElementById(tab.dataset.tab + 'Tab').classList.add('active');
+
+                // Auto-run backtest when switching to backtest tab for the first time
+                if (tab.dataset.tab === 'backtest' && !backtestLoaded) {
+                    backtestLoaded = true;
+                    runBacktest();
+                }
             });
         });
 
