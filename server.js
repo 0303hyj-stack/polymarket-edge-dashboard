@@ -10,8 +10,9 @@ const server = http.createServer(async (req, res) => {
         try {
             const GAMMA_API = 'https://gamma-api.polymarket.com/markets?closed=false&active=true&limit=500';
 
-            // Fetch multiple pages in parallel (up to 5000 markets)
-            const offsets = [0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500];
+            // Fetch multiple pages in parallel (up to 15000 markets)
+            const offsets = [];
+            for (let i = 0; i < 30; i++) offsets.push(i * 500);
             const promises = offsets.map(offset =>
                 fetch(`${GAMMA_API}&offset=${offset}`).then(r => r.json()).catch(() => [])
             );
