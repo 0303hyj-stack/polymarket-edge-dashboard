@@ -790,7 +790,17 @@
                 const response = await fetch(`/api/price-history?tokenId=${tokenId}&fidelity=${fidelity}`);
                 if (!response.ok) return [];
                 const data = await response.json();
-                return data.history || [];
+                const history = data.history || [];
+
+                // Fallback to daily if hourly/10min returns empty (older markets)
+                if (history.length === 0 && fidelity !== '1440') {
+                    const fallbackResponse = await fetch(`/api/price-history?tokenId=${tokenId}&fidelity=1440`);
+                    if (fallbackResponse.ok) {
+                        const fallbackData = await fallbackResponse.json();
+                        return fallbackData.history || [];
+                    }
+                }
+                return history;
             } catch (e) {
                 return [];
             }
