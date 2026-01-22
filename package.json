@@ -1,0 +1,12 @@
+{
+  "name": "polymarket-edge-dashboard",
+  "version": "1.0.0",
+  "description": "Polymarket Edge Dashboard - Find edge opportunities in markets near expiry with ~50% prices",
+  "scripts": {
+    "dev": "npx serve public -l 3000",
+    "build": "echo 'Static site - no build needed'"
+  },
+  "keywords": ["polymarket", "prediction-markets", "dashboard"],
+  "author": "",
+  "license": "MIT"
+}

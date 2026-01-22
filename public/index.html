@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polymarket Edge Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #fff;
+            color: #111;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 32px;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #111;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 0.85rem;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .filters {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .filter-group label {
+            font-size: 0.7rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-group input, .filter-group select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: #fff;
+            color: #111;
+            font-size: 0.85rem;
+        }
+
+        .filter-group input:focus, .filter-group select:focus {
+            outline: none;
+            border-color: #111;
+        }
+
+        .refresh-btn {
+            padding: 8px 16px;
+            background: #2563eb;
+            border: none;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .refresh-btn:hover {
+            background: #1d4ed8;
+        }
+
+        .refresh-btn:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .stat-card .value {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #111;
+        }
+
+        .stat-card .label {
+            font-size: 0.7rem;
+            color: #888;
+            text-transform: uppercase;
+        }
+
+        .last-updated {
+            font-size: 0.75rem;
+            color: #888;
+            margin-bottom: 16px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: #888;
+        }
+
+        .loading .spinner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #eee;
+            border-top-color: #111;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 12px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .table-container {
+            border: 1px solid #eee;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        th {
+            background: #f8f8f8;
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 1px solid #eee;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        th.sortable {
+            cursor: pointer;
+        }
+
+        th.sortable:hover {
+            background: #f0f0f0;
+        }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        tr:hover {
+            background: #fafafa;
+        }
+
+        .market-link {
+            color: #111;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .market-link:hover {
+            color: #2563eb;
+            text-decoration: underline;
+        }
+
+        .price-cell {
+            font-family: 'SF Mono', Monaco, monospace;
+            font-weight: 500;
+        }
+
+        .yes-price {
+            color: #059669;
+        }
+
+        .no-price {
+            color: #dc2626;
+        }
+
+        .expiry-urgent {
+            color: #dc2626;
+            font-weight: 600;
+        }
+
+        .expiry-soon {
+            color: #d97706;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Polymarket Edge Dashboard</h1>
+            <p class="subtitle">Markets near expiry with mid price around 50 cents (YES ≈ NO)</p>
+        </header>
+
+        <div class="filters">
+            <div class="filter-group">
+                <label>Expiry</label>
+                <select id="maxDays">
+                    <option value="3">3 days</option>
+                    <option value="7">7 days</option>
+                    <option value="14">14 days</option>
+                    <option value="30" selected>30 days</option>
+                    <option value="90">90 days</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Mid Price Range</label>
+                <select id="priceRange">
+                    <option value="2" selected>48-52 (tight)</option>
+                    <option value="5">45-55 (medium)</option>
+                    <option value="10">40-60 (wide)</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Min Volume</label>
+                <input type="number" id="minVolume" value="0" min="0" style="width: 80px;">
+            </div>
+            <button class="refresh-btn" id="refreshBtn">Refresh</button>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="value" id="totalFetched">-</div>
+                <div class="label">Total Fetched</div>
+            </div>
+            <div class="stat-card">
+                <div class="value" id="matchingMarkets">-</div>
+                <div class="label">Matching</div>
+            </div>
+            <div class="stat-card">
+                <div class="value" id="avgYesPrice">-</div>
+                <div class="label">Avg YES Price</div>
+            </div>
+        </div>
+
+        <p class="last-updated" id="lastUpdated"></p>
+
+        <div id="marketsContainer">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Loading markets...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_ENDPOINT = '/api/markets';
+        let allMarkets = [];
+        let sortColumn = 'days_left';
+        let sortDirection = 'asc';
+
+        async function fetchMarkets() {
+            const container = document.getElementById('marketsContainer');
+            const refreshBtn = document.getElementById('refreshBtn');
+
+            container.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Fetching markets...</p>
+                </div>
+            `;
+            refreshBtn.disabled = true;
+
+            try {
+                const response = await fetch(API_ENDPOINT);
+                if (!response.ok) throw new Error('API request failed');
+                const markets = await response.json();
+                allMarkets = markets;
+
+                document.getElementById('totalFetched').textContent = allMarkets.length.toLocaleString();
+                document.getElementById('lastUpdated').textContent =
+                    `Last updated: ${new Date().toLocaleString()}`;
+
+                filterAndDisplayMarkets();
+
+            } catch (error) {
+                console.error('Error:', error);
+                container.innerHTML = `
+                    <div class="no-results">
+                        <p>Failed to load data: ${error.message}</p>
+                    </div>
+                `;
+            } finally {
+                refreshBtn.disabled = false;
+            }
+        }
+
+        function filterAndDisplayMarkets() {
+            const maxDays = parseInt(document.getElementById('maxDays').value);
+            const priceRange = parseInt(document.getElementById('priceRange').value);
+            const minVolume = parseFloat(document.getElementById('minVolume').value) || 0;
+
+            const priceMin = 50 - priceRange;
+            const priceMax = 50 + priceRange;
+
+            const now = new Date();
+
+            // Debug counters
+            let stats = {
+                total: allMarkets.length,
+                notBinary: 0,
+                noExpiry: 0,
+                expiredOrTooFar: 0,
+                noBidAsk: 0,
+                wideSpread: 0,
+                priceOutOfRange: 0,
+                lowVolume: 0,
+                passed: 0
+            };
+
+            const filtered = allMarkets.filter(market => {
+                // Binary markets only
+                try {
+                    const outcomes = JSON.parse(market.outcomes || '[]');
+                    if (outcomes.length !== 2) { stats.notBinary++; return false; }
+                } catch (e) {
+                    stats.notBinary++;
+                    return false;
+                }
+
+                // Check expiry
+                if (!market.endDate) { stats.noExpiry++; return false; }
+                const endDate = new Date(market.endDate);
+                const daysLeft = (endDate - now) / (1000 * 60 * 60 * 24);
+                if (daysLeft <= 0 || daysLeft > maxDays) { stats.expiredOrTooFar++; return false; }
+
+                // Get YES price from outcomePrices
+                let outcomePrices;
+                try {
+                    outcomePrices = JSON.parse(market.outcomePrices || '[]');
+                    if (outcomePrices.length !== 2) { stats.noBidAsk++; return false; }
+                } catch (e) {
+                    stats.noBidAsk++;
+                    return false;
+                }
+
+                const yesPrice = parseFloat(outcomePrices[0]) * 100;
+                const noPrice = parseFloat(outcomePrices[1]) * 100;
+                if (isNaN(yesPrice) || isNaN(noPrice)) { stats.noBidAsk++; return false; }
+
+                // Filter out markets with wide spread (>10¢)
+                const bestBid = parseFloat(market.bestBid);
+                const bestAsk = parseFloat(market.bestAsk);
+                if (!isNaN(bestBid) && !isNaN(bestAsk)) {
+                    const spread = (bestAsk - bestBid) * 100;
+                    if (spread > 10) { stats.wideSpread++; return false; }
+                }
+
+                // MID PRICE CHECK: YES price should be near 50 (48-52 for tight filter)
+                // If YES is 48-52, then NO (100-YES) is also 48-52 → symmetric
+                if (yesPrice < priceMin || yesPrice > priceMax) { stats.priceOutOfRange++; return false; }
+
+                // Volume filter
+                const vol24 = parseFloat(market.volume24hr) || 0;
+                if (vol24 < minVolume) { stats.lowVolume++; return false; }
+
+                stats.passed++;
+                return true;
+            }).map(market => {
+                const endDate = new Date(market.endDate);
+                const daysLeft = (endDate - now) / (1000 * 60 * 60 * 24);
+
+                // Use outcomePrices for YES/NO prices
+                const outcomePrices = JSON.parse(market.outcomePrices || '[]');
+                const yesPrice = parseFloat(outcomePrices[0]) * 100;
+                const noPrice = parseFloat(outcomePrices[1]) * 100;
+
+                // Safety check
+                if (isNaN(yesPrice) || isNaN(noPrice)) return null;
+
+                const vol24 = parseFloat(market.volume24hr) || 0;
+
+                const eventSlug = market.events && market.events[0]
+                    ? market.events[0].slug
+                    : market.slug;
+                const marketUrl = `https://polymarket.com/event/${eventSlug}`;
+
+                return {
+                    question: market.question,
+                    yes_price: yesPrice,
+                    no_price: noPrice,
+                    days_left: daysLeft,
+                    vol24: vol24,
+                    url: marketUrl
+                };
+            }).filter(m => m !== null);
+
+            // Sort
+            filtered.sort((a, b) => {
+                let aVal = a[sortColumn];
+                let bVal = b[sortColumn];
+                if (typeof aVal === 'string') {
+                    aVal = aVal.toLowerCase();
+                    bVal = bVal.toLowerCase();
+                }
+                return sortDirection === 'asc' ? (aVal > bVal ? 1 : -1) : (aVal < bVal ? 1 : -1);
+            });
+
+            // Log filter stats to console
+            console.log('=== Filter Stats ===');
+            console.log(`Total markets fetched: ${stats.total}`);
+            console.log(`Not binary: ${stats.notBinary}`);
+            console.log(`No expiry date: ${stats.noExpiry}`);
+            console.log(`Expired or too far: ${stats.expiredOrTooFar}`);
+            console.log(`No bid/ask data: ${stats.noBidAsk}`);
+            console.log(`Wide spread (>10¢): ${stats.wideSpread}`);
+            console.log(`Mid price out of range (${priceMin}-${priceMax}¢): ${stats.priceOutOfRange}`);
+            console.log(`Low volume: ${stats.lowVolume}`);
+            console.log(`PASSED all filters: ${stats.passed}`);
+
+            displayMarkets(filtered);
+            updateStats(filtered);
+        }
+
+        function displayMarkets(markets) {
+            const container = document.getElementById('marketsContainer');
+
+            if (markets.length === 0) {
+                container.innerHTML = `
+                    <div class="no-results">
+                        <p>No symmetric markets found.</p>
+                        <p style="margin-top: 8px; font-size: 0.85rem;">Try widening the price range or increasing max days.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const sortIndicator = (col) => sortColumn === col ? (sortDirection === 'asc' ? ' ↑' : ' ↓') : '';
+
+            container.innerHTML = `
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="sortable" data-sort="question">Market${sortIndicator('question')}</th>
+                                <th class="sortable" data-sort="yes_price">YES${sortIndicator('yes_price')}</th>
+                                <th class="sortable" data-sort="no_price">NO${sortIndicator('no_price')}</th>
+                                <th class="sortable" data-sort="days_left">Expires${sortIndicator('days_left')}</th>
+                                <th class="sortable" data-sort="vol24">24h Vol${sortIndicator('vol24')}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${markets.map(m => createRow(m)).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            // Add sort handlers
+            document.querySelectorAll('th.sortable').forEach(th => {
+                th.addEventListener('click', () => {
+                    const col = th.dataset.sort;
+                    if (sortColumn === col) {
+                        sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        sortColumn = col;
+                        sortDirection = col === 'question' ? 'asc' : 'desc';
+                    }
+                    filterAndDisplayMarkets();
+                });
+            });
+        }
+
+        function createRow(m) {
+            let expiryClass = '';
+            let expiryText = `${m.days_left.toFixed(1)}d`;
+
+            if (m.days_left <= 1) {
+                expiryClass = 'expiry-urgent';
+                expiryText = `${(m.days_left * 24).toFixed(0)}h`;
+            } else if (m.days_left <= 3) {
+                expiryClass = 'expiry-soon';
+            }
+
+            const questionShort = m.question.length > 65
+                ? m.question.substring(0, 62) + '...'
+                : m.question;
+
+            return `
+                <tr>
+                    <td>
+                        <a href="${m.url}" target="_blank" class="market-link" title="${m.question}">
+                            ${questionShort}
+                        </a>
+                    </td>
+                    <td class="price-cell yes-price">${m.yes_price.toFixed(1)}¢</td>
+                    <td class="price-cell no-price">${m.no_price.toFixed(1)}¢</td>
+                    <td class="${expiryClass}">${expiryText}</td>
+                    <td>$${formatNumber(m.vol24)}</td>
+                </tr>
+            `;
+        }
+
+        function updateStats(markets) {
+            document.getElementById('matchingMarkets').textContent = markets.length;
+
+            if (markets.length > 0) {
+                const avgYes = markets.reduce((sum, m) => sum + m.yes_price, 0) / markets.length;
+                document.getElementById('avgYesPrice').textContent = avgYes.toFixed(1) + '¢';
+            } else {
+                document.getElementById('avgYesPrice').textContent = '-';
+            }
+        }
+
+        function formatNumber(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toFixed(0);
+        }
+
+        // Event listeners
+        document.getElementById('refreshBtn').addEventListener('click', fetchMarkets);
+        ['maxDays', 'priceRange', 'minVolume'].forEach(id => {
+            document.getElementById(id).addEventListener('change', filterAndDisplayMarkets);
+        });
+
+        // Initial load
+        fetchMarkets();
+
+        // Auto refresh every 60 seconds
+        setInterval(fetchMarkets, 60000);
+    </script>
+</body>
+</html>
