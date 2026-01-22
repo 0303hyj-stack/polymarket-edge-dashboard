@@ -811,17 +811,20 @@
 
             try {
                 const markets = await fetchClosedMarkets(minVolume);
-                container.querySelector('p').textContent = `Found ${markets.length} resolved markets. Analyzing...`;
+                const totalToAnalyze = Math.min(markets.length, 500);
+                container.querySelector('p').textContent = `Found ${markets.length} resolved markets. Analyzing ${totalToAnalyze}...`;
 
                 const results = [];
                 let processed = 0;
+                const BATCH_SIZE = 15; // Process 15 markets in parallel
 
-                for (const market of markets.slice(0, 500)) {
+                // Process market and return result
+                async function processMarket(market) {
                     const tokens = JSON.parse(market.clobTokenIds || '[]');
-                    if (!tokens[0] || !market.endDate || !market.startDate) continue;
+                    if (!tokens[0] || !market.endDate || !market.startDate) return null;
 
                     const history = await fetchPriceHistory(tokens[0]);
-                    if (history.length === 0) continue;
+                    if (history.length === 0) return null;
 
                     const finalPrices = JSON.parse(market.outcomePrices || '[]');
                     const yesResolved = parseFloat(finalPrices[0]) === 1;
@@ -830,7 +833,6 @@
                     const endDate = new Date(market.endDate);
                     const totalDuration = endDate - startDate;
 
-                    // Find 50¢ moments based on filter
                     let near50;
                     if (nearExpiryPercent > 0) {
                         near50 = history.filter(h => {
@@ -848,17 +850,11 @@
                         const entryPrice = near50[0].p;
                         const exitPrice = yesResolved ? 1 : 0;
                         const profit = ((exitPrice - entryPrice) / entryPrice * 100);
-
                         const entryDate = new Date(near50[0].t * 1000);
                         const daysToExpiry = (endDate - entryDate) / (1000 * 60 * 60 * 24);
+                        const eventSlug = market.events && market.events[0] ? market.events[0].slug : market.slug;
 
-                        // Build market URL
-                        const eventSlug = market.events && market.events[0]
-                            ? market.events[0].slug
-                            : market.slug;
-                        const marketUrl = `https://polymarket.com/event/${eventSlug}`;
-
-                        results.push({
+                        return {
                             question: market.question,
                             volume: parseFloat(market.volume),
                             entryPrice: entryPrice * 100,
@@ -866,19 +862,24 @@
                             profit: profit,
                             daysToExpiry: daysToExpiry,
                             closedDate: market.closedTime ? market.closedTime.split('T')[0] : 'N/A',
-                            url: marketUrl
-                        });
+                            url: `https://polymarket.com/event/${eventSlug}`
+                        };
                     }
+                    return null;
+                }
 
-                    processed++;
-                    const progress = (processed / Math.min(markets.length, 500)) * 100;
+                // Process in batches
+                const marketsToProcess = markets.slice(0, 500);
+                for (let i = 0; i < marketsToProcess.length; i += BATCH_SIZE) {
+                    const batch = marketsToProcess.slice(i, i + BATCH_SIZE);
+                    const batchResults = await Promise.all(batch.map(m => processMarket(m)));
+
+                    batchResults.forEach(r => { if (r) results.push(r); });
+                    processed += batch.length;
+
+                    const progress = (processed / totalToAnalyze) * 100;
                     progressBar.querySelector('.fill').style.width = progress + '%';
-
-                    if (processed % 5 === 0) {
-                        container.querySelector('p').textContent = `Analyzed ${processed}/${Math.min(markets.length, 500)} markets...`;
-                    }
-
-                    await new Promise(r => setTimeout(r, 50));
+                    container.querySelector('p').textContent = `Analyzed ${processed}/${totalToAnalyze} markets...`;
                 }
 
                 displayBacktestResults(results);
