@@ -152,3 +152,73 @@ Stopping server...
 [2026-01-23T09:23:37.908Z] [INFO] No candidates found (near-expiry ≤1%)
 [2026-01-23T09:24:08.409Z] [INFO] Fetched 3500 markets
 [2026-01-23T09:24:08.435Z] [INFO] No candidates found (near-expiry ≤1%)
+[2026-01-23T09:24:38.140Z] [INFO] Fetched 3500 markets
+[2026-01-23T09:24:38.148Z] [INFO] No candidates found (near-expiry ≤1%)
+[2026-01-23T09:25:08.031Z] [INFO] Fetched 3500 markets
+[2026-01-23T09:25:08.037Z] [INFO] No candidates found (near-expiry ≤1%)
+[2026-01-23T09:25:37.956Z] [INFO] Fetched 3500 markets
+[2026-01-23T09:25:37.968Z] [INFO] No candidates found (near-expiry ≤1%)
+[2026-01-23T09:26:08.267Z] [INFO] Fetched 3500 markets
+[2026-01-23T09:26:08.272Z] [INFO] No candidates found (near-expiry ≤1%)
+[2026-01-23T09:26:38.089Z] [INFO] Fetched 3500 markets
+[2026-01-23T09:26:38.093Z] [INFO] No candidates found (near-expiry ≤1%)
+[2026-01-23T09:27:08.161Z] [INFO] Fetched 3500 markets
+[2026-01-23T09:27:08.182Z] [INFO] No candidates found (near-expiry ≤1%)
+[2026-01-23T09:27:37.848Z] [INFO] Fetched 3500 markets
+[2026-01-23T09:27:37.852Z] [INFO] No candidates found (near-expiry ≤1%)
+[2026-01-23T09:28:07.925Z] [INFO] Fetched 3500 markets
+[2026-01-23T09:28:07.932Z] [INFO] No candidates found (near-expiry ≤1%)
+[2026-01-23T09:28:37.826Z] [INFO] Fetched 3500 markets
+[2026-01-23T09:28:37.831Z] [INFO] No candidates found (near-expiry ≤1%)
+[2026-01-23T09:29:07.788Z] [INFO] Fetched 3500 markets
+[2026-01-23T09:29:07.793Z] [INFO] No candidates found (near-expiry ≤1%)
+[2026-01-23T09:29:38.722Z] [INFO] Fetched 3500 markets
+[2026-01-23T09:29:38.728Z] [INFO] No candidates found (near-expiry ≤1%)
+[2026-01-23T09:30:07.897Z] [INFO] Fetched 3500 markets
+[2026-01-23T09:30:07.906Z] [INFO] No candidates found (near-expiry ≤1%)
+[2026-01-23T09:30:37.848Z] [INFO] Fetched 3500 markets
+[2026-01-23T09:30:37.852Z] [INFO] No candidates found (near-expiry ≤1%)
+[2026-01-23T09:31:07.857Z] [INFO] Fetched 3500 markets
+[2026-01-23T09:31:07.861Z] [INFO] No candidates found (near-expiry ≤1%)
+[2026-01-23T09:31:37.870Z] [INFO] Fetched 3500 markets
+[2026-01-23T09:31:37.874Z] [INFO] No candidates found (near-expiry ≤1%)
+[2026-01-23T09:32:07.826Z] [INFO] Fetched 3500 markets
+[2026-01-23T09:32:07.830Z] [INFO] No candidates found (near-expiry ≤1%)
+[2026-01-23T09:32:37.911Z] [INFO] Fetched 3500 markets
+[2026-01-23T09:32:37.917Z] [INFO] No candidates found (near-expiry ≤1%)
+[2026-01-23T09:33:08.134Z] [INFO] Fetched 3500 markets
+[2026-01-23T09:33:08.140Z] [INFO] No candidates found (near-expiry ≤1%)
+[2026-01-23T09:33:37.844Z] [INFO] Fetched 3500 markets
+[2026-01-23T09:33:37.849Z] [INFO] No candidates found (near-expiry ≤1%)
+[2026-01-23T09:34:08.077Z] [INFO] Fetched 3500 markets
+[2026-01-23T09:34:08.082Z] [INFO] No candidates found (near-expiry ≤1%)
+[2026-01-23T09:34:37.912Z] [INFO] Fetched 3500 markets
+[2026-01-23T09:34:37.915Z] [INFO] No candidates found (near-expiry ≤1%)
+[2026-01-23T09:35:07.879Z] [INFO] Fetched 3500 markets
+[2026-01-23T09:35:07.882Z] [INFO] No candidates found (near-expiry ≤1%)
+[2026-01-23T09:35:39.407Z] [INFO] Fetched 3500 markets
+[2026-01-23T09:35:39.412Z] [INFO] No candidates found (near-expiry ≤1%)
+[2026-01-23T09:36:07.857Z] [INFO] Fetched 3500 markets
+[2026-01-23T09:36:07.863Z] [INFO] No candidates found (near-expiry ≤1%)
+[2026-01-23T09:36:37.956Z] [INFO] Fetched 3500 markets
+[2026-01-23T09:36:37.961Z] [INFO] No candidates found (near-expiry ≤1%)
+[2026-01-23T09:37:07.869Z] [INFO] Fetched 3500 markets
+[2026-01-23T09:37:07.872Z] [INFO] No candidates found (near-expiry ≤1%)
+[2026-01-23T09:37:37.951Z] [INFO] Fetched 3500 markets
+[2026-01-23T09:37:37.956Z] [INFO] No candidates found (near-expiry ≤1%)
+[2026-01-23T09:37:38.935Z] [INFO] 
+Stopping server...
+[2026-01-23T09:37:39.376Z] [INFO] Loaded state: Balance=$10000.00, Positions=0, History=0
+[2026-01-23T09:37:39.385Z] [INFO] Starting first scan...
+[2026-01-23T09:37:39.827Z] [INFO] Fetched 3500 markets
+[2026-01-23T09:37:39.840Z] [INFO] No candidates found (near-expiry ≤1%)
+[2026-01-23T09:38:11.553Z] [INFO] Fetched 3500 markets
+[2026-01-23T09:38:11.559Z] [INFO] No candidates found (near-expiry ≤1%)
+[2026-01-23T09:38:41.586Z] [INFO] Fetched 3500 markets
+[2026-01-23T09:38:41.591Z] [INFO] No candidates found (near-expiry ≤1%)
+[2026-01-23T09:39:11.628Z] [INFO] Fetched 3500 markets
+[2026-01-23T09:39:11.632Z] [INFO] No candidates found (near-expiry ≤1%)
+[2026-01-23T09:39:41.482Z] [INFO] Fetched 3500 markets
+[2026-01-23T09:39:41.486Z] [INFO] No candidates found (near-expiry ≤1%)
+[2026-01-23T09:40:11.321Z] [INFO] Fetched 3500 markets
+[2026-01-23T09:40:11.325Z] [INFO] No candidates found (near-expiry ≤1%)

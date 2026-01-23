@@ -1,0 +1,13 @@
+{
+  "portfolio": {
+    "startingBalance": 10000,
+    "balance": 10000,
+    "positions": [],
+    "history": [],
+    "marketCooldowns": {}
+  },
+  "isRunning": false,
+  "lastScan": "2026-01-23T09:37:36.373Z",
+  "totalScans": 91,
+  "errors": 0
+}

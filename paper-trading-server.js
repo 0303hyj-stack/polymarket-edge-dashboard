@@ -17,8 +17,8 @@ const CONFIG = {
     maxPositions: 50,          // 최대 동시 포지션
 
     // 안전 장치
-    maxSpread: 10,             // 최대 스프레드 10¢
-    cooldownMinutes: 30,       // 마켓당 쿨다운 30분
+    maxSpread: 2,              // 최대 스프레드 2¢
+    cooldownMinutes: 10000000, // 마켓당 쿨다운 (사실상 무제한 - 같은 마켓 재매수 안함)
 
     // 모니터링 간격
     pollIntervalSec: 30,       // 30초마다 체크 (API rate limit 고려)

@@ -671,11 +671,11 @@
                     </div>
                     <div class="config-item">
                         <label>Max Spread (¢)</label>
-                        <input type="number" id="ptConfigSpread" value="10" min="1" max="50">
+                        <input type="number" id="ptConfigSpread" value="2" min="1" max="50">
                     </div>
                     <div class="config-item">
                         <label>Cooldown per Market (min)</label>
-                        <input type="number" id="ptConfigCooldown" value="30" min="1">
+                        <input type="number" id="ptConfigCooldown" value="10000000" min="1">
                     </div>
                     <div class="config-item">
                         <label>Poll Interval (sec)</label>
@@ -1396,8 +1396,8 @@
                 nearExpiryPercent: 1,
                 buyTrigger: 49,
                 buyTriggerExact: true, // true = exactly 49¢, false = ≤49¢
-                maxSpread: 10,
-                cooldownMinutes: 30,
+                maxSpread: 2,
+                cooldownMinutes: 10000000,
                 pollIntervalSec: 30
             },
 
