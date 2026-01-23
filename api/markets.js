@@ -18,9 +18,9 @@ export default async function handler(req, res) {
   try {
     const GAMMA_API = 'https://gamma-api.polymarket.com/markets?closed=false&active=true&limit=500';
 
-    // Fetch multiple pages in parallel (up to 15000 markets)
+    // Fetch multiple pages in parallel (up to 30000 markets)
     const offsets = [];
-    for (let i = 0; i < 30; i++) offsets.push(i * 500);
+    for (let i = 0; i < 60; i++) offsets.push(i * 500);
     const promises = offsets.map(offset =>
       fetch(`${GAMMA_API}&offset=${offset}`).then(r => r.json()).catch(() => [])
     );

@@ -4,7 +4,13 @@
   "description": "Polymarket Edge Dashboard - Find edge opportunities in markets near expiry with ~50% prices",
   "scripts": {
     "dev": "npx serve public -l 3000",
-    "build": "echo 'Static site - no build needed'"
+    "build": "echo 'Static site - no build needed'",
+    "server": "node server.js",
+    "paper-trading": "node paper-trading-server.js",
+    "paper-trading:start": "pm2 start paper-trading-server.js --name paper-trading",
+    "paper-trading:stop": "pm2 stop paper-trading",
+    "paper-trading:logs": "pm2 logs paper-trading",
+    "paper-trading:status": "pm2 status"
   },
   "keywords": ["polymarket", "prediction-markets", "dashboard"],
   "author": "",

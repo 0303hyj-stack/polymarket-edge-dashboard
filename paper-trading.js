@@ -171,7 +171,7 @@ function executePaperBuy(signal) {
 
     log(`🟢 BUY: ${market.question.slice(0, 50)}...`);
     log(`   Entry: ${(bestAsk * 100).toFixed(1)}¢ | Shares: ${shares.toFixed(2)} | Cost: $${CONFIG.tradeAmount}`);
-    log(`   Time to expiry: ${timeToExpiry.toFixed(2)} days (${percentRemaining.toFixed(2)}% remaining)`);
+    log(`   Days to expiry: ${daysToExpiry.toFixed(1)}d`);
 
     return trade;
 }
@@ -308,7 +308,7 @@ async function start() {
     console.log('='.repeat(60));
     console.log(`Target Ask Price: ≤${(CONFIG.targetAskPrice * 100).toFixed(0)}¢`);
     console.log(`Price Range: ${(CONFIG.minAskPrice * 100).toFixed(0)}¢ - ${(CONFIG.maxAskPrice * 100).toFixed(0)}¢`);
-    console.log(`Max Time Remaining: ${CONFIG.maxTimeRemainingPercent}%`);
+    console.log(`Max Days to Expiry: ${CONFIG.maxDaysToExpiry} days`);
     console.log(`Trade Amount: $${CONFIG.tradeAmount}`);
     console.log(`Check Interval: ${CONFIG.checkIntervalMs / 1000}s`);
     console.log('='.repeat(60) + '\n');

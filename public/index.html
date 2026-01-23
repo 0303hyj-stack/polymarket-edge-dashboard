@@ -334,6 +334,212 @@
             background: #2563eb;
             transition: width 0.3s;
         }
+
+        /* Paper Trading Styles */
+        .paper-trading-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .paper-trading-controls {
+            display: flex;
+            gap: 12px;
+        }
+
+        .paper-trading-controls button {
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .start-btn {
+            background: #059669;
+            border: none;
+            color: white;
+        }
+
+        .start-btn:hover {
+            background: #047857;
+        }
+
+        .stop-btn {
+            background: #dc2626;
+            border: none;
+            color: white;
+        }
+
+        .stop-btn:hover {
+            background: #b91c1c;
+        }
+
+        .paper-portfolio {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .portfolio-card {
+            background: #f8f8f8;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .portfolio-card.profit {
+            background: #ecfdf5;
+        }
+
+        .portfolio-card.loss {
+            background: #fef2f2;
+        }
+
+        .portfolio-card .value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #111;
+        }
+
+        .portfolio-card.profit .value {
+            color: #059669;
+        }
+
+        .portfolio-card.loss .value {
+            color: #dc2626;
+        }
+
+        .portfolio-card .label {
+            font-size: 0.7rem;
+            color: #666;
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+
+        .config-panel {
+            background: #f8f8f8;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .config-panel h3 {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #333;
+        }
+
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 16px;
+        }
+
+        .config-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .config-item label {
+            font-size: 0.7rem;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        .config-item input, .config-item select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status-dot.running {
+            background: #059669;
+            animation: pulse 1.5s infinite;
+        }
+
+        .status-dot.stopped {
+            background: #888;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .trade-log {
+            max-height: 300px;
+            overflow-y: auto;
+            background: #111;
+            border-radius: 8px;
+            padding: 12px;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 0.75rem;
+            margin-bottom: 24px;
+        }
+
+        .trade-log .log-entry {
+            color: #888;
+            margin-bottom: 4px;
+        }
+
+        .trade-log .log-entry.buy {
+            color: #34d399;
+        }
+
+        .trade-log .log-entry.sell {
+            color: #f87171;
+        }
+
+        .trade-log .log-entry.info {
+            color: #60a5fa;
+        }
+
+        .trade-log .log-entry.warn {
+            color: #fbbf24;
+        }
+
+        .positions-section h3, .history-section h3 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #333;
+        }
+
+        .position-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 0.85rem;
+        }
+
+        .position-row.header {
+            font-weight: 600;
+            color: #666;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+        }
     </style>
 </head>
 <body>
@@ -346,6 +552,7 @@
         <!-- Tab Navigation -->
         <div class="tabs">
             <button class="tab active" data-tab="live">Live Markets</button>
+            <button class="tab" data-tab="paper">Paper Trading</button>
             <button class="tab" data-tab="backtest">Backtest History</button>
         </div>
 
@@ -399,6 +606,134 @@
             </div>
         </div>
         </div><!-- End Live Tab -->
+
+        <!-- Paper Trading Tab -->
+        <div id="paperTab" class="tab-content">
+            <div class="paper-trading-header">
+                <div class="status-indicator">
+                    <span class="status-dot stopped" id="ptStatusDot"></span>
+                    <span id="ptStatusText">Stopped</span>
+                </div>
+                <div class="paper-trading-controls">
+                    <button class="start-btn" id="ptStartBtn">Start Trading</button>
+                    <button class="stop-btn" id="ptStopBtn" style="display: none;">Stop</button>
+                    <button class="refresh-btn" id="ptResetBtn">Reset Portfolio</button>
+                </div>
+            </div>
+
+            <!-- Portfolio Summary -->
+            <div class="paper-portfolio" id="ptPortfolio">
+                <div class="portfolio-card">
+                    <div class="value" id="ptBalance">$1,000.00</div>
+                    <div class="label">Available Balance</div>
+                </div>
+                <div class="portfolio-card">
+                    <div class="value" id="ptPositionValue">$0.00</div>
+                    <div class="label">Position Value</div>
+                </div>
+                <div class="portfolio-card" id="ptTotalCard">
+                    <div class="value" id="ptTotalValue">$1,000.00</div>
+                    <div class="label">Total Value</div>
+                </div>
+                <div class="portfolio-card" id="ptPnlCard">
+                    <div class="value" id="ptPnL">$0.00</div>
+                    <div class="label">Total P/L</div>
+                </div>
+                <div class="portfolio-card">
+                    <div class="value" id="ptWinRate">-</div>
+                    <div class="label">Win Rate</div>
+                </div>
+            </div>
+
+            <!-- Configuration Panel -->
+            <div class="config-panel">
+                <h3>Trading Configuration</h3>
+                <div class="config-grid">
+                    <div class="config-item">
+                        <label>Starting Balance ($)</label>
+                        <input type="number" id="ptConfigBalance" value="1000" min="100">
+                    </div>
+                    <div class="config-item">
+                        <label>Position Size ($)</label>
+                        <input type="number" id="ptConfigSize" value="10" min="1">
+                    </div>
+                    <div class="config-item">
+                        <label>Max Open Positions</label>
+                        <input type="number" id="ptConfigMaxPos" value="10" min="1" max="50">
+                    </div>
+                    <div class="config-item">
+                        <label>Near Expiry Threshold (%)</label>
+                        <input type="number" id="ptConfigExpiry" value="1" min="0.1" max="10" step="0.1">
+                    </div>
+                    <div class="config-item">
+                        <label>Buy Trigger (Ask ≤ ¢)</label>
+                        <input type="number" id="ptConfigTrigger" value="49" min="1" max="50">
+                    </div>
+                    <div class="config-item">
+                        <label>Max Spread (¢)</label>
+                        <input type="number" id="ptConfigSpread" value="10" min="1" max="50">
+                    </div>
+                    <div class="config-item">
+                        <label>Cooldown per Market (min)</label>
+                        <input type="number" id="ptConfigCooldown" value="30" min="1">
+                    </div>
+                    <div class="config-item">
+                        <label>Poll Interval (sec)</label>
+                        <input type="number" id="ptConfigInterval" value="10" min="5" max="300">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trade Log -->
+            <div class="trade-log" id="ptLog">
+                <div class="log-entry info">[System] Paper trading module initialized. Click "Start Trading" to begin.</div>
+            </div>
+
+            <!-- Open Positions -->
+            <div class="positions-section">
+                <h3>Open Positions (<span id="ptOpenCount">0</span>)</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Market</th>
+                                <th>Side</th>
+                                <th>Entry</th>
+                                <th>Current</th>
+                                <th>Unrealized P/L</th>
+                                <th>Time to Expiry</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ptPositions">
+                            <tr><td colspan="6" style="text-align: center; color: #888; padding: 20px;">No open positions</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Trade History -->
+            <div class="history-section" style="margin-top: 24px;">
+                <h3>Trade History (<span id="ptHistoryCount">0</span>)</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Market</th>
+                                <th>Side</th>
+                                <th>Entry</th>
+                                <th>Exit</th>
+                                <th>P/L</th>
+                                <th>Result</th>
+                                <th>Closed</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ptHistory">
+                            <tr><td colspan="7" style="text-align: center; color: #888; padding: 20px;">No trade history</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div><!-- End Paper Trading Tab -->
 
         <!-- Backtest Tab -->
         <div id="backtestTab" class="tab-content">
@@ -501,7 +836,7 @@
             }
         }
 
-        function filterAndDisplayMarkets() {
+        async function filterAndDisplayMarkets() {
             const maxPercent = parseInt(document.getElementById('maxPercent').value);
             const priceRange = parseInt(document.getElementById('priceRange').value);
             const minVolume = parseFloat(document.getElementById('minVolume').value) || 0;
@@ -524,7 +859,8 @@
                 passed: 0
             };
 
-            const filtered = allMarkets.filter(market => {
+            // Step 1: Pre-filter candidates (time/binary/volume only - NOT price)
+            const candidates = allMarkets.filter(market => {
                 // Binary markets only (exclude multi-outcome negRisk markets)
                 try {
                     const outcomes = JSON.parse(market.outcomes || '[]');
@@ -537,7 +873,7 @@
                 // Exclude negRisk markets (multi-outcome like Grammy winners)
                 if (market.negRisk === true) { stats.notBinary++; return false; }
 
-                // Check expiry - only show markets with less than 1% of total duration remaining
+                // Check expiry - only show markets with less than X% of total duration remaining
                 if (!market.endDate) { stats.noExpiry++; return false; }
                 if (!market.startDate) { stats.noExpiry++; return false; }
                 const startDate = new Date(market.startDate);
@@ -546,55 +882,105 @@
                 const daysLeft = (endDate - now) / (1000 * 60 * 60 * 24);
                 const timeLeft = endDate - now;
 
-                // Must be still active and within 1% of total duration
+                // Must be still active and within X% of total duration
                 if (daysLeft <= 0) { stats.expiredOrTooFar++; return false; }
                 const percentRemaining = (timeLeft / totalDuration) * 100;
                 if (percentRemaining > maxPercent) { stats.expiredOrTooFar++; return false; }
-
-                // Get YES price from outcomePrices
-                let outcomePrices;
-                try {
-                    outcomePrices = JSON.parse(market.outcomePrices || '[]');
-                    if (outcomePrices.length !== 2) { stats.noBidAsk++; return false; }
-                } catch (e) {
-                    stats.noBidAsk++;
-                    return false;
-                }
-
-                const yesPrice = parseFloat(outcomePrices[0]) * 100;
-                const noPrice = parseFloat(outcomePrices[1]) * 100;
-                if (isNaN(yesPrice) || isNaN(noPrice)) { stats.noBidAsk++; return false; }
-
-                // Filter out markets with wide spread (>10¢)
-                const bestBid = parseFloat(market.bestBid);
-                const bestAsk = parseFloat(market.bestAsk);
-                if (!isNaN(bestBid) && !isNaN(bestAsk)) {
-                    const spread = (bestAsk - bestBid) * 100;
-                    if (spread > 10) { stats.wideSpread++; return false; }
-                }
-
-                // MID PRICE CHECK: YES price should be near 50 (48-52 for tight filter)
-                // If YES is 48-52, then NO (100-YES) is also 48-52 → symmetric
-                if (yesPrice < priceMin || yesPrice > priceMax) { stats.priceOutOfRange++; return false; }
 
                 // Volume filter
                 const vol24 = parseFloat(market.volume24hr) || 0;
                 if (vol24 < minVolume) { stats.lowVolume++; return false; }
 
-                stats.passed++;
+                // Need token ID for CLOB API
+                try {
+                    const tokens = JSON.parse(market.clobTokenIds || '[]');
+                    if (!tokens[0]) { stats.noBidAsk++; return false; }
+                } catch (e) {
+                    stats.noBidAsk++;
+                    return false;
+                }
+
                 return true;
-            }).map(market => {
+            });
+
+            console.log(`Pre-filter: ${candidates.length} candidates from ${allMarkets.length} markets`);
+
+            // Step 2: Fetch real-time CLOB orderbook prices for candidates
+            const tokenIds = candidates.map(m => {
+                const tokens = JSON.parse(m.clobTokenIds || '[]');
+                return tokens[0];
+            });
+
+            let orderbooks = {};
+            if (tokenIds.length > 0) {
+                try {
+                    const response = await fetch('/api/orderbooks', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ tokenIds })
+                    });
+                    orderbooks = await response.json();
+                } catch (e) {
+                    console.error('Failed to fetch orderbooks:', e);
+                }
+            }
+
+            // Step 3: Apply price filter using real-time CLOB data
+            const filtered = candidates.map(market => {
+                const tokens = JSON.parse(market.clobTokenIds || '[]');
+                const tokenId = tokens[0];
+                const orderbook = orderbooks[tokenId];
+
+                if (!orderbook) return null;
+
+                // Get best ask (YES price) from CLOB orderbook
+                const asks = orderbook.asks || [];
+                const bids = orderbook.bids || [];
+
+                if (asks.length === 0 && bids.length === 0) {
+                    stats.noBidAsk++;
+                    return null;
+                }
+
+                // Best ask = lowest ask price (what you pay to buy YES)
+                // Best bid = highest bid price (what you get to sell YES)
+                const bestAsk = asks.length > 0 ? parseFloat(asks[0].price) : null;
+                const bestBid = bids.length > 0 ? parseFloat(bids[0].price) : null;
+
+                // Use mid price if both available, otherwise use what we have
+                let yesPrice;
+                if (bestAsk !== null && bestBid !== null) {
+                    yesPrice = ((bestAsk + bestBid) / 2) * 100;
+                } else if (bestAsk !== null) {
+                    yesPrice = bestAsk * 100;
+                } else if (bestBid !== null) {
+                    yesPrice = bestBid * 100;
+                } else {
+                    stats.noBidAsk++;
+                    return null;
+                }
+
+                const noPrice = 100 - yesPrice;
+
+                // Check spread
+                if (bestAsk !== null && bestBid !== null) {
+                    const spread = (bestAsk - bestBid) * 100;
+                    if (spread > 10) {
+                        stats.wideSpread++;
+                        return null;
+                    }
+                }
+
+                // Price filter using real-time data
+                if (yesPrice < priceMin || yesPrice > priceMax) {
+                    stats.priceOutOfRange++;
+                    return null;
+                }
+
+                stats.passed++;
+
                 const endDate = new Date(market.endDate);
                 const daysLeft = (endDate - now) / (1000 * 60 * 60 * 24);
-
-                // Use outcomePrices for YES/NO prices
-                const outcomePrices = JSON.parse(market.outcomePrices || '[]');
-                const yesPrice = parseFloat(outcomePrices[0]) * 100;
-                const noPrice = parseFloat(outcomePrices[1]) * 100;
-
-                // Safety check
-                if (isNaN(yesPrice) || isNaN(noPrice)) return null;
-
                 const vol24 = parseFloat(market.volume24hr) || 0;
 
                 const eventSlug = market.events && market.events[0]
@@ -608,7 +994,9 @@
                     no_price: noPrice,
                     days_left: daysLeft,
                     vol24: vol24,
-                    url: marketUrl
+                    url: marketUrl,
+                    bestAsk: bestAsk,
+                    bestBid: bestBid
                 };
             }).filter(m => m !== null);
 
@@ -624,7 +1012,7 @@
             });
 
             // Log filter stats to console
-            console.log('=== Filter Stats ===');
+            console.log('=== Filter Stats (Real-time CLOB prices) ===');
             console.log(`Total markets fetched: ${stats.total}`);
             console.log(`Not binary: ${stats.notBinary}`);
             console.log(`No expiry date: ${stats.noExpiry}`);
@@ -990,6 +1378,461 @@
         }
 
         document.getElementById('runBacktestBtn').addEventListener('click', runBacktest);
+
+        // ========== PAPER TRADING FUNCTIONALITY ==========
+        const PaperTrading = {
+            isRunning: false,
+            intervalId: null,
+            portfolio: {
+                startingBalance: 10000,
+                balance: 10000,
+                positions: [],
+                history: [],
+                marketCooldowns: {} // marketId -> lastTradeTime
+            },
+            config: {
+                positionSize: 100,
+                maxPositions: 50,
+                nearExpiryPercent: 1,
+                buyTrigger: 49,
+                buyTriggerExact: true, // true = exactly 49¢, false = ≤49¢
+                maxSpread: 10,
+                cooldownMinutes: 30,
+                pollIntervalSec: 30
+            },
+
+            init() {
+                this.loadFromStorage();
+                this.updateUI();
+                this.bindEvents();
+            },
+
+            loadFromStorage() {
+                try {
+                    const saved = localStorage.getItem('paperTradingData');
+                    if (saved) {
+                        const data = JSON.parse(saved);
+                        this.portfolio = { ...this.portfolio, ...data.portfolio };
+                        this.config = { ...this.config, ...data.config };
+                        this.updateConfigUI();
+                    }
+                } catch (e) {
+                    console.error('Failed to load paper trading data:', e);
+                }
+            },
+
+            saveToStorage() {
+                try {
+                    localStorage.setItem('paperTradingData', JSON.stringify({
+                        portfolio: this.portfolio,
+                        config: this.config
+                    }));
+                } catch (e) {
+                    console.error('Failed to save paper trading data:', e);
+                }
+            },
+
+            updateConfigUI() {
+                document.getElementById('ptConfigBalance').value = this.portfolio.startingBalance;
+                document.getElementById('ptConfigSize').value = this.config.positionSize;
+                document.getElementById('ptConfigMaxPos').value = this.config.maxPositions;
+                document.getElementById('ptConfigExpiry').value = this.config.nearExpiryPercent;
+                document.getElementById('ptConfigTrigger').value = this.config.buyTrigger;
+                document.getElementById('ptConfigSpread').value = this.config.maxSpread;
+                document.getElementById('ptConfigCooldown').value = this.config.cooldownMinutes;
+                document.getElementById('ptConfigInterval').value = this.config.pollIntervalSec;
+            },
+
+            readConfigUI() {
+                this.portfolio.startingBalance = parseFloat(document.getElementById('ptConfigBalance').value) || 10000;
+                this.config.positionSize = parseFloat(document.getElementById('ptConfigSize').value) || 100;
+                this.config.maxPositions = parseInt(document.getElementById('ptConfigMaxPos').value) || 10;
+                this.config.nearExpiryPercent = parseFloat(document.getElementById('ptConfigExpiry').value) || 1;
+                this.config.buyTrigger = parseFloat(document.getElementById('ptConfigTrigger').value) || 49;
+                this.config.maxSpread = parseFloat(document.getElementById('ptConfigSpread').value) || 10;
+                this.config.cooldownMinutes = parseFloat(document.getElementById('ptConfigCooldown').value) || 30;
+                this.config.pollIntervalSec = parseInt(document.getElementById('ptConfigInterval').value) || 10;
+                this.saveToStorage();
+            },
+
+            bindEvents() {
+                document.getElementById('ptStartBtn').addEventListener('click', () => this.start());
+                document.getElementById('ptStopBtn').addEventListener('click', () => this.stop());
+                document.getElementById('ptResetBtn').addEventListener('click', () => this.reset());
+            },
+
+            log(message, type = 'info') {
+                const logDiv = document.getElementById('ptLog');
+                const timestamp = new Date().toLocaleTimeString();
+                const entry = document.createElement('div');
+                entry.className = `log-entry ${type}`;
+                entry.textContent = `[${timestamp}] ${message}`;
+                logDiv.appendChild(entry);
+                logDiv.scrollTop = logDiv.scrollHeight;
+
+                // Keep only last 100 entries
+                while (logDiv.children.length > 100) {
+                    logDiv.removeChild(logDiv.firstChild);
+                }
+            },
+
+            start() {
+                if (this.isRunning) return;
+
+                this.readConfigUI();
+                this.isRunning = true;
+
+                document.getElementById('ptStatusDot').className = 'status-dot running';
+                document.getElementById('ptStatusText').textContent = 'Running';
+                document.getElementById('ptStartBtn').style.display = 'none';
+                document.getElementById('ptStopBtn').style.display = 'inline-block';
+
+                this.log('Paper trading started. Monitoring markets...', 'info');
+
+                // Run immediately then on interval
+                this.scanMarkets();
+                this.intervalId = setInterval(() => this.scanMarkets(), this.config.pollIntervalSec * 1000);
+            },
+
+            stop() {
+                if (!this.isRunning) return;
+
+                this.isRunning = false;
+                if (this.intervalId) {
+                    clearInterval(this.intervalId);
+                    this.intervalId = null;
+                }
+
+                document.getElementById('ptStatusDot').className = 'status-dot stopped';
+                document.getElementById('ptStatusText').textContent = 'Stopped';
+                document.getElementById('ptStartBtn').style.display = 'inline-block';
+                document.getElementById('ptStopBtn').style.display = 'none';
+
+                this.log('Paper trading stopped.', 'warn');
+            },
+
+            reset() {
+                if (this.isRunning) this.stop();
+
+                this.readConfigUI();
+                this.portfolio.balance = this.portfolio.startingBalance;
+                this.portfolio.positions = [];
+                this.portfolio.history = [];
+                this.portfolio.marketCooldowns = {};
+
+                this.saveToStorage();
+                this.updateUI();
+
+                document.getElementById('ptLog').innerHTML = '';
+                this.log('Portfolio reset to $' + this.portfolio.startingBalance.toFixed(2), 'info');
+            },
+
+            async scanMarkets() {
+                if (!this.isRunning) return;
+
+                try {
+                    // First check open positions for resolution
+                    await this.checkPositions();
+
+                    // Check if we can open more positions
+                    if (this.portfolio.positions.length >= this.config.maxPositions) {
+                        return;
+                    }
+
+                    if (this.portfolio.balance < this.config.positionSize) {
+                        return;
+                    }
+
+                    // Fetch all markets
+                    const response = await fetch('/api/markets');
+                    const markets = await response.json();
+
+                    const now = new Date();
+                    const candidates = [];
+
+                    // Filter for near-expiry binary markets
+                    for (const market of markets) {
+                        try {
+                            const outcomes = JSON.parse(market.outcomes || '[]');
+                            if (outcomes.length !== 2) continue;
+                            if (market.negRisk === true) continue;
+
+                            if (!market.endDate || !market.startDate) continue;
+
+                            const startDate = new Date(market.startDate);
+                            const endDate = new Date(market.endDate);
+                            const totalDuration = endDate - startDate;
+                            const timeLeft = endDate - now;
+
+                            if (timeLeft <= 0) continue;
+
+                            const percentRemaining = (timeLeft / totalDuration) * 100;
+                            if (percentRemaining > this.config.nearExpiryPercent) continue;
+
+                            const tokens = JSON.parse(market.clobTokenIds || '[]');
+                            if (!tokens[0]) continue;
+
+                            // Check cooldown
+                            const lastTrade = this.portfolio.marketCooldowns[market.id];
+                            if (lastTrade) {
+                                const cooldownMs = this.config.cooldownMinutes * 60 * 1000;
+                                if (now - new Date(lastTrade) < cooldownMs) continue;
+                            }
+
+                            // Check if already have position
+                            if (this.portfolio.positions.find(p => p.marketId === market.id)) continue;
+
+                            candidates.push({
+                                market,
+                                tokenId: tokens[0],
+                                tokenIdNo: tokens[1],
+                                percentRemaining,
+                                timeLeft
+                            });
+                        } catch (e) {
+                            continue;
+                        }
+                    }
+
+                    if (candidates.length === 0) return;
+
+                    // Fetch orderbooks for candidates (batch)
+                    const tokenIds = candidates.flatMap(c => [c.tokenId, c.tokenIdNo].filter(Boolean));
+                    let orderbooks = {};
+
+                    try {
+                        const obResponse = await fetch('/api/orderbooks', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ tokenIds })
+                        });
+                        orderbooks = await obResponse.json();
+                    } catch (e) {
+                        this.log('Failed to fetch orderbooks', 'warn');
+                        return;
+                    }
+
+                    // Check for buy signals
+                    for (const candidate of candidates) {
+                        if (this.portfolio.positions.length >= this.config.maxPositions) break;
+                        if (this.portfolio.balance < this.config.positionSize) break;
+
+                        const yesOB = orderbooks[candidate.tokenId];
+                        const noOB = candidate.tokenIdNo ? orderbooks[candidate.tokenIdNo] : null;
+
+                        if (!yesOB) continue;
+
+                        const yesAsks = yesOB.asks || [];
+                        const yesBids = yesOB.bids || [];
+                        const noAsks = noOB?.asks || [];
+
+                        // Check YES ask price
+                        const yesBestAsk = yesAsks.length > 0 ? parseFloat(yesAsks[0].price) * 100 : null;
+                        const yesBestBid = yesBids.length > 0 ? parseFloat(yesBids[0].price) * 100 : null;
+                        const noBestAsk = noAsks.length > 0 ? parseFloat(noAsks[0].price) * 100 : null;
+
+                        // Check spread
+                        if (yesBestAsk !== null && yesBestBid !== null) {
+                            const spread = yesBestAsk - yesBestBid;
+                            if (spread > this.config.maxSpread) continue;
+                        }
+
+                        // Buy YES if ask matches trigger (exact 49¢ or ≤49¢ based on config)
+                        if (yesBestAsk !== null) {
+                            const yesMatch = this.config.buyTriggerExact
+                                ? (Math.round(yesBestAsk) === this.config.buyTrigger)
+                                : (yesBestAsk <= this.config.buyTrigger);
+                            if (yesMatch) {
+                                this.executeBuy(candidate, 'YES', yesBestAsk);
+                                continue;
+                            }
+                        }
+
+                        // Buy NO if ask matches trigger (exact 49¢ or ≤49¢ based on config)
+                        if (noBestAsk !== null) {
+                            const noMatch = this.config.buyTriggerExact
+                                ? (Math.round(noBestAsk) === this.config.buyTrigger)
+                                : (noBestAsk <= this.config.buyTrigger);
+                            if (noMatch) {
+                                this.executeBuy(candidate, 'NO', noBestAsk);
+                                continue;
+                            }
+                        }
+                    }
+
+                } catch (e) {
+                    this.log('Scan error: ' + e.message, 'warn');
+                }
+            },
+
+            executeBuy(candidate, side, price) {
+                const shares = this.config.positionSize / (price / 100);
+                const cost = this.config.positionSize;
+
+                this.portfolio.balance -= cost;
+
+                const position = {
+                    id: Date.now().toString(),
+                    marketId: candidate.market.id,
+                    tokenId: side === 'YES' ? candidate.tokenId : candidate.tokenIdNo,
+                    question: candidate.market.question,
+                    side: side,
+                    entryPrice: price,
+                    shares: shares,
+                    cost: cost,
+                    entryTime: new Date().toISOString(),
+                    endDate: candidate.market.endDate,
+                    percentRemainingAtEntry: candidate.percentRemaining
+                };
+
+                this.portfolio.positions.push(position);
+                this.portfolio.marketCooldowns[candidate.market.id] = new Date().toISOString();
+
+                this.saveToStorage();
+                this.updateUI();
+
+                this.log(`BUY ${side}: ${candidate.market.question.slice(0, 40)}... @ ${price.toFixed(1)}¢ ($${cost})`, 'buy');
+            },
+
+            async checkPositions() {
+                const positionsToClose = [];
+
+                for (const position of this.portfolio.positions) {
+                    try {
+                        // Fetch market status via proxy to avoid CORS
+                        const response = await fetch(`/api/market?id=${position.marketId}`);
+                        const market = await response.json();
+
+                        if (!market) continue;
+
+                        const prices = JSON.parse(market.outcomePrices || '[]');
+                        const isClosed = market.closed || (prices[0] === '1' || prices[0] === '0');
+
+                        if (isClosed) {
+                            const yesWon = parseFloat(prices[0]) === 1;
+                            const won = (position.side === 'YES' && yesWon) || (position.side === 'NO' && !yesWon);
+                            const exitPrice = won ? 100 : 0;
+                            const proceeds = position.shares * (exitPrice / 100);
+                            const profit = proceeds - position.cost;
+                            const profitPercent = (profit / position.cost) * 100;
+
+                            positionsToClose.push({
+                                position,
+                                exitPrice,
+                                profit,
+                                profitPercent,
+                                won
+                            });
+                        }
+                    } catch (e) {
+                        // Ignore errors
+                    }
+                }
+
+                // Close resolved positions
+                for (const close of positionsToClose) {
+                    this.portfolio.balance += close.position.shares * (close.exitPrice / 100);
+
+                    const historyEntry = {
+                        ...close.position,
+                        exitPrice: close.exitPrice,
+                        exitTime: new Date().toISOString(),
+                        profit: close.profit,
+                        profitPercent: close.profitPercent,
+                        result: close.won ? 'WIN' : 'LOSS'
+                    };
+
+                    this.portfolio.history.unshift(historyEntry);
+                    this.portfolio.positions = this.portfolio.positions.filter(p => p.id !== close.position.id);
+
+                    const emoji = close.won ? '✅' : '❌';
+                    this.log(`${emoji} CLOSED: ${close.position.question.slice(0, 40)}... ${close.won ? 'WIN' : 'LOSS'} ${close.profit >= 0 ? '+' : ''}$${close.profit.toFixed(2)}`, close.won ? 'buy' : 'sell');
+                }
+
+                if (positionsToClose.length > 0) {
+                    this.saveToStorage();
+                    this.updateUI();
+                }
+            },
+
+            updateUI() {
+                // Calculate position value (approximate current value)
+                let positionValue = this.portfolio.positions.reduce((sum, p) => sum + p.cost, 0);
+                let totalValue = this.portfolio.balance + positionValue;
+                let pnl = totalValue - this.portfolio.startingBalance;
+
+                // Update cards
+                document.getElementById('ptBalance').textContent = '$' + this.portfolio.balance.toFixed(2);
+                document.getElementById('ptPositionValue').textContent = '$' + positionValue.toFixed(2);
+                document.getElementById('ptTotalValue').textContent = '$' + totalValue.toFixed(2);
+                document.getElementById('ptPnL').textContent = (pnl >= 0 ? '+' : '') + '$' + pnl.toFixed(2);
+
+                // Win rate
+                const closedTrades = this.portfolio.history.length;
+                if (closedTrades > 0) {
+                    const wins = this.portfolio.history.filter(h => h.result === 'WIN').length;
+                    document.getElementById('ptWinRate').textContent = ((wins / closedTrades) * 100).toFixed(1) + '%';
+                } else {
+                    document.getElementById('ptWinRate').textContent = '-';
+                }
+
+                // Style P/L card
+                const pnlCard = document.getElementById('ptPnlCard');
+                pnlCard.className = 'portfolio-card ' + (pnl >= 0 ? 'profit' : 'loss');
+
+                // Open positions table
+                const positionsBody = document.getElementById('ptPositions');
+                document.getElementById('ptOpenCount').textContent = this.portfolio.positions.length;
+
+                if (this.portfolio.positions.length === 0) {
+                    positionsBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #888; padding: 20px;">No open positions</td></tr>';
+                } else {
+                    positionsBody.innerHTML = this.portfolio.positions.map(p => {
+                        const endDate = new Date(p.endDate);
+                        const timeLeft = endDate - new Date();
+                        const hoursLeft = Math.max(0, timeLeft / (1000 * 60 * 60));
+                        const timeText = hoursLeft < 24 ? `${hoursLeft.toFixed(1)}h` : `${(hoursLeft / 24).toFixed(1)}d`;
+
+                        return `
+                            <tr>
+                                <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${p.question}">${p.question.slice(0, 40)}...</td>
+                                <td class="${p.side === 'YES' ? 'yes-price' : 'no-price'}">${p.side}</td>
+                                <td class="price-cell">${p.entryPrice.toFixed(1)}¢</td>
+                                <td class="price-cell">-</td>
+                                <td>-</td>
+                                <td>${timeText}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+
+                // Trade history table
+                const historyBody = document.getElementById('ptHistory');
+                document.getElementById('ptHistoryCount').textContent = this.portfolio.history.length;
+
+                if (this.portfolio.history.length === 0) {
+                    historyBody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #888; padding: 20px;">No trade history</td></tr>';
+                } else {
+                    historyBody.innerHTML = this.portfolio.history.slice(0, 50).map(h => {
+                        const exitDate = new Date(h.exitTime).toLocaleDateString();
+                        return `
+                            <tr>
+                                <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${h.question}">${h.question.slice(0, 35)}...</td>
+                                <td class="${h.side === 'YES' ? 'yes-price' : 'no-price'}">${h.side}</td>
+                                <td class="price-cell">${h.entryPrice.toFixed(1)}¢</td>
+                                <td class="price-cell">${h.exitPrice.toFixed(0)}¢</td>
+                                <td class="${h.profit >= 0 ? 'result-win' : 'result-loss'}">${h.profit >= 0 ? '+' : ''}$${h.profit.toFixed(2)}</td>
+                                <td class="${h.result === 'WIN' ? 'result-win' : 'result-loss'}">${h.result}</td>
+                                <td style="color: #888; font-size: 0.8rem;">${exitDate}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+            }
+        };
+
+        // Initialize paper trading
+        PaperTrading.init();
 
         // Initial load
         fetchMarkets();

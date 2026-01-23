@@ -12,9 +12,9 @@ const server = http.createServer(async (req, res) => {
         try {
             const GAMMA_API = 'https://gamma-api.polymarket.com/markets?closed=false&active=true&limit=500';
 
-            // Fetch multiple pages in parallel (up to 15000 markets)
+            // Fetch multiple pages in parallel (up to 30000 markets)
             const offsets = [];
-            for (let i = 0; i < 30; i++) offsets.push(i * 500);
+            for (let i = 0; i < 60; i++) offsets.push(i * 500);
             const promises = offsets.map(offset =>
                 fetch(`${GAMMA_API}&offset=${offset}`).then(r => r.json()).catch(() => [])
             );
@@ -67,6 +67,97 @@ const server = http.createServer(async (req, res) => {
 
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify(uniqueMarkets));
+        } catch (error) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: error.message }));
+        }
+        return;
+    }
+
+    // API proxy for CLOB orderbook (real-time prices)
+    if (url.pathname === '/api/orderbook') {
+        const tokenId = url.searchParams.get('tokenId');
+        if (!tokenId) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'tokenId is required' }));
+            return;
+        }
+        try {
+            const response = await fetch(`https://clob.polymarket.com/book?token_id=${tokenId}`);
+            const data = await response.json();
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(data));
+        } catch (error) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: error.message }));
+        }
+        return;
+    }
+
+    // API proxy for batch orderbook (multiple tokens)
+    if (url.pathname === '/api/orderbooks') {
+        if (req.method !== 'POST') {
+            res.writeHead(405, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'POST required' }));
+            return;
+        }
+
+        let body = '';
+        req.on('data', chunk => body += chunk);
+        req.on('end', async () => {
+            try {
+                const { tokenIds } = JSON.parse(body);
+                if (!Array.isArray(tokenIds)) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'tokenIds array required' }));
+                    return;
+                }
+
+                // Fetch orderbooks in parallel (limit to 20 at a time)
+                const results = {};
+                const BATCH_SIZE = 20;
+
+                for (let i = 0; i < tokenIds.length; i += BATCH_SIZE) {
+                    const batch = tokenIds.slice(i, i + BATCH_SIZE);
+                    const promises = batch.map(async (tokenId) => {
+                        try {
+                            const resp = await fetch(`https://clob.polymarket.com/book?token_id=${tokenId}`);
+                            const data = await resp.json();
+                            return { tokenId, data };
+                        } catch (e) {
+                            return { tokenId, data: null };
+                        }
+                    });
+
+                    const batchResults = await Promise.all(promises);
+                    batchResults.forEach(r => {
+                        results[r.tokenId] = r.data;
+                    });
+                }
+
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify(results));
+            } catch (error) {
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: error.message }));
+            }
+        });
+        return;
+    }
+
+    // API proxy for single market (paper trading)
+    if (url.pathname === '/api/market') {
+        const marketId = url.searchParams.get('id');
+        if (!marketId) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Market ID is required' }));
+            return;
+        }
+        try {
+            const response = await fetch(`https://gamma-api.polymarket.com/markets/${marketId}`);
+            const data = await response.json();
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(data));
         } catch (error) {
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ error: error.message }));
