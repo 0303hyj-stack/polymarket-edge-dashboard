@@ -1514,13 +1514,28 @@
             reset() {
                 if (this.isRunning) this.stop();
 
-                this.readConfigUI();
-                this.portfolio.balance = this.portfolio.startingBalance;
-                this.portfolio.positions = [];
-                this.portfolio.history = [];
-                this.portfolio.marketCooldowns = {};
+                // Reset to default values (ignore localStorage)
+                this.portfolio = {
+                    startingBalance: 10000,
+                    balance: 10000,
+                    positions: [],
+                    history: [],
+                    marketCooldowns: {}
+                };
+                this.config = {
+                    positionSize: 100,
+                    maxPositions: 50,
+                    nearExpiryPercent: 1,
+                    buyTrigger: 49,
+                    buyTriggerExact: true,
+                    maxSpread: 10,
+                    cooldownMinutes: 30,
+                    pollIntervalSec: 30
+                };
 
-                this.saveToStorage();
+                // Clear localStorage and update UI
+                localStorage.removeItem('paperTradingData');
+                this.updateConfigUI();
                 this.updateUI();
 
                 document.getElementById('ptLog').innerHTML = '';
