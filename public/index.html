@@ -1405,6 +1405,12 @@
                 this.loadFromStorage();
                 this.updateUI();
                 this.bindEvents();
+
+                // Auto-resume if bot was running before page refresh
+                if (localStorage.getItem('paperTradingRunning') === 'true') {
+                    this.log('Auto-resuming paper trading after page refresh...', 'info');
+                    setTimeout(() => this.start(), 1000);
+                }
             },
 
             loadFromStorage() {
@@ -1481,6 +1487,7 @@
 
                 this.readConfigUI();
                 this.isRunning = true;
+                localStorage.setItem('paperTradingRunning', 'true');
 
                 document.getElementById('ptStatusDot').className = 'status-dot running';
                 document.getElementById('ptStatusText').textContent = 'Running';
@@ -1498,6 +1505,7 @@
                 if (!this.isRunning) return;
 
                 this.isRunning = false;
+                localStorage.setItem('paperTradingRunning', 'false');
                 if (this.intervalId) {
                     clearInterval(this.intervalId);
                     this.intervalId = null;
@@ -1535,6 +1543,7 @@
 
                 // Clear localStorage and update UI
                 localStorage.removeItem('paperTradingData');
+                localStorage.removeItem('paperTradingRunning');
                 this.updateConfigUI();
                 this.updateUI();
 
