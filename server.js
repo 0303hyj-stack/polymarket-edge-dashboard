@@ -188,6 +188,47 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
+    // PM2 Paper Trading Data API
+    if (url.pathname === '/api/pm2-data') {
+        const dataFile = path.join(__dirname, 'paper-trading-data.json');
+        try {
+            if (fs.existsSync(dataFile)) {
+                const data = JSON.parse(fs.readFileSync(dataFile, 'utf8'));
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify(data));
+            } else {
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'No PM2 data file found' }));
+            }
+        } catch (error) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: error.message }));
+        }
+        return;
+    }
+
+    // PM2 Paper Trading Logs API
+    if (url.pathname === '/api/pm2-logs') {
+        const logFile = path.join(__dirname, 'paper-trading-server.log');
+        const lines = parseInt(url.searchParams.get('lines')) || 50;
+        try {
+            if (fs.existsSync(logFile)) {
+                const content = fs.readFileSync(logFile, 'utf8');
+                const allLines = content.trim().split('\n');
+                const recentLines = allLines.slice(-lines);
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ logs: recentLines }));
+            } else {
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ logs: [] }));
+            }
+        } catch (error) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: error.message }));
+        }
+        return;
+    }
+
     // Serve static files
     let filePath = req.url === '/' ? '/index.html' : req.url;
     filePath = path.join(__dirname, 'public', filePath);

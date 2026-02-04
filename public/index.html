@@ -335,6 +335,155 @@
             transition: width 0.3s;
         }
 
+        /* PM2 Bot Status Styles */
+        .pm2-section {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 32px;
+            color: white;
+        }
+
+        .pm2-section h3 {
+            color: #60a5fa;
+            margin-bottom: 16px;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pm2-status-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .pm2-status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pm2-status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ef4444;
+        }
+
+        .pm2-status-dot.running {
+            background: #22c55e;
+            animation: pm2pulse 1.5s infinite;
+        }
+
+        @keyframes pm2pulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+            50% { opacity: 0.8; box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
+        }
+
+        .pm2-stats {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .pm2-stat-card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .pm2-stat-card .value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .pm2-stat-card .label {
+            font-size: 0.7rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+
+        .pm2-stat-card.profit .value { color: #4ade80; }
+        .pm2-stat-card.loss .value { color: #f87171; }
+
+        .pm2-positions-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            margin-bottom: 20px;
+        }
+
+        .pm2-positions-table th,
+        .pm2-positions-table td {
+            padding: 10px 8px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .pm2-positions-table th {
+            color: #94a3b8;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+        }
+
+        .pm2-positions-table td {
+            color: #e2e8f0;
+        }
+
+        .pm2-log-box {
+            background: #0f172a;
+            border-radius: 8px;
+            padding: 16px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 0.75rem;
+        }
+
+        .pm2-log-line {
+            color: #64748b;
+            margin-bottom: 4px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .pm2-log-line.buy { color: #4ade80; }
+        .pm2-log-line.info { color: #60a5fa; }
+        .pm2-log-line.error { color: #f87171; }
+        .pm2-log-line.win { color: #4ade80; }
+        .pm2-log-line.loss { color: #f87171; }
+
+        .pm2-refresh-note {
+            color: #64748b;
+            font-size: 0.75rem;
+            margin-top: 12px;
+        }
+
+        .pm2-section-divider {
+            border: none;
+            border-top: 2px dashed #334155;
+            margin: 32px 0;
+        }
+
+        .browser-trading-label {
+            background: #f59e0b;
+            color: #1a1a1a;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 16px;
+        }
+
         /* Paper Trading Styles */
         .paper-trading-header {
             display: flex;
@@ -609,6 +758,90 @@
 
         <!-- Paper Trading Tab -->
         <div id="paperTab" class="tab-content">
+            <!-- PM2 Bot Status Section -->
+            <div class="pm2-section" id="pm2Section">
+                <h3>PM2 Bot Status (Server-side)</h3>
+                <div class="pm2-status-row">
+                    <div class="pm2-status-indicator">
+                        <span class="pm2-status-dot" id="pm2StatusDot"></span>
+                        <span id="pm2StatusText">Checking...</span>
+                    </div>
+                    <span id="pm2ScanInfo" style="color: #94a3b8; font-size: 0.85rem;"></span>
+                </div>
+
+                <div class="pm2-stats" id="pm2Stats">
+                    <div class="pm2-stat-card">
+                        <div class="value" id="pm2Balance">-</div>
+                        <div class="label">Balance</div>
+                    </div>
+                    <div class="pm2-stat-card">
+                        <div class="value" id="pm2PositionValue">-</div>
+                        <div class="label">Position Value</div>
+                    </div>
+                    <div class="pm2-stat-card">
+                        <div class="value" id="pm2TotalValue">-</div>
+                        <div class="label">Total Value</div>
+                    </div>
+                    <div class="pm2-stat-card" id="pm2PnlCard">
+                        <div class="value" id="pm2PnL">-</div>
+                        <div class="label">P/L</div>
+                    </div>
+                    <div class="pm2-stat-card">
+                        <div class="value" id="pm2WinRate">-</div>
+                        <div class="label">Win Rate</div>
+                    </div>
+                    <div class="pm2-stat-card">
+                        <div class="value" id="pm2AvgEntry">-</div>
+                        <div class="label">Avg Entry</div>
+                    </div>
+                    <div class="pm2-stat-card">
+                        <div class="value" id="pm2Positions">-</div>
+                        <div class="label">Open Positions</div>
+                    </div>
+                </div>
+
+                <!-- PM2 Open Positions -->
+                <div id="pm2PositionsContainer" style="margin-bottom: 20px;">
+                    <h4 style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 12px;">Open Positions</h4>
+                    <table class="pm2-positions-table">
+                        <thead>
+                            <tr><th>Market</th><th>Side</th><th>Entry</th><th>Cost</th><th>Time Left</th></tr>
+                        </thead>
+                        <tbody id="pm2PositionsBody">
+                            <tr><td colspan="5" style="text-align: center; color: #64748b;">No open positions</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- PM2 Trade History -->
+                <div id="pm2HistoryContainer" style="margin-bottom: 20px;">
+                    <h4 style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 12px;">Trade History (<span id="pm2HistoryCount">0</span>)</h4>
+                    <div style="max-height: 300px; overflow-y: auto;">
+                    <table class="pm2-positions-table">
+                        <thead>
+                            <tr><th>Market</th><th>Side</th><th>Entry</th><th>Exit</th><th>P/L</th><th>Result</th></tr>
+                        </thead>
+                        <tbody id="pm2HistoryBody">
+                            <tr><td colspan="6" style="text-align: center; color: #64748b;">No trade history</td></tr>
+                        </tbody>
+                    </table>
+                    </div>
+                </div>
+
+                <!-- PM2 Logs -->
+                <div>
+                    <h4 style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 12px;">Recent Logs</h4>
+                    <div class="pm2-log-box" id="pm2LogBox">
+                        <div class="pm2-log-line">Loading logs...</div>
+                    </div>
+                </div>
+
+                <p class="pm2-refresh-note">Auto-refresh every 10 seconds. Last updated: <span id="pm2LastUpdate">-</span></p>
+            </div>
+
+            <hr class="pm2-section-divider">
+            <div class="browser-trading-label">Browser-based Paper Trading (localStorage)</div>
+
             <div class="paper-trading-header">
                 <div class="status-indicator">
                     <span class="status-dot stopped" id="ptStatusDot"></span>
@@ -1857,6 +2090,140 @@
 
         // Initialize paper trading
         PaperTrading.init();
+
+        // PM2 Bot Status Module
+        const PM2Status = {
+            async fetchData() {
+                try {
+                    const [dataRes, logsRes] = await Promise.all([
+                        fetch('/api/pm2-data'),
+                        fetch('/api/pm2-logs?lines=30')
+                    ]);
+                    const data = await dataRes.json();
+                    const logs = await logsRes.json();
+                    return { data, logs: logs.logs || [] };
+                } catch (e) {
+                    console.error('Failed to fetch PM2 data:', e);
+                    return null;
+                }
+            },
+
+            updateUI(result) {
+                if (!result || result.data.error) {
+                    document.getElementById('pm2StatusText').textContent = 'No Data';
+                    document.getElementById('pm2StatusDot').classList.remove('running');
+                    return;
+                }
+
+                const { data, logs } = result;
+                const portfolio = data.portfolio || {};
+                const balance = portfolio.balance || 0;
+                const startingBalance = portfolio.startingBalance || 10000;
+                const positions = portfolio.positions || [];
+                const history = portfolio.history || [];
+
+                // Status
+                const isRunning = data.isRunning;
+                document.getElementById('pm2StatusDot').classList.toggle('running', isRunning);
+                document.getElementById('pm2StatusText').textContent = isRunning ? 'Running' : 'Stopped';
+                document.getElementById('pm2ScanInfo').textContent = `Total Scans: ${data.totalScans || 0} | Errors: ${data.errors || 0}`;
+
+                // Stats
+                const positionValue = positions.reduce((sum, p) => sum + (p.cost || 0), 0);
+                const totalValue = balance + positionValue;
+                const pnl = totalValue - startingBalance;
+                const wins = history.filter(h => h.result === 'WIN').length;
+                const winRate = history.length > 0 ? ((wins / history.length) * 100).toFixed(1) + '%' : '-';
+                const avgEntry = history.length > 0
+                    ? (history.reduce((sum, h) => sum + (h.entryPrice || 0), 0) / history.length).toFixed(1) + 'c'
+                    : '-';
+
+                document.getElementById('pm2Balance').textContent = '$' + balance.toFixed(2);
+                document.getElementById('pm2PositionValue').textContent = '$' + positionValue.toFixed(2);
+                document.getElementById('pm2TotalValue').textContent = '$' + totalValue.toFixed(2);
+                document.getElementById('pm2PnL').textContent = (pnl >= 0 ? '+' : '') + '$' + pnl.toFixed(2);
+                document.getElementById('pm2WinRate').textContent = winRate;
+                document.getElementById('pm2AvgEntry').textContent = avgEntry;
+                document.getElementById('pm2Positions').textContent = positions.length;
+
+                // P/L color
+                const pnlCard = document.getElementById('pm2PnlCard');
+                pnlCard.classList.remove('profit', 'loss');
+                pnlCard.classList.add(pnl >= 0 ? 'profit' : 'loss');
+
+                // Positions table
+                const posBody = document.getElementById('pm2PositionsBody');
+                if (positions.length === 0) {
+                    posBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #64748b;">No open positions</td></tr>';
+                } else {
+                    posBody.innerHTML = positions.map(p => {
+                        const endDate = new Date(p.endDate);
+                        const timeLeft = endDate - new Date();
+                        const hoursLeft = Math.max(0, timeLeft / (1000 * 60 * 60));
+                        const timeText = hoursLeft < 24 ? hoursLeft.toFixed(1) + 'h' : (hoursLeft / 24).toFixed(1) + 'd';
+                        const marketLink = p.url ? `<a href="${p.url}" target="_blank" style="color: #60a5fa; text-decoration: none;" title="${p.question}">${p.question.slice(0, 40)}...</a>` : `${p.question.slice(0, 40)}...`;
+                        return `<tr>
+                            <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${marketLink}</td>
+                            <td style="color: ${p.side === 'YES' ? '#4ade80' : '#f87171'}">${p.side}</td>
+                            <td>${p.entryPrice.toFixed(1)}c</td>
+                            <td>$${p.cost}</td>
+                            <td>${timeText}</td>
+                        </tr>`;
+                    }).join('');
+                }
+
+                // History table
+                const histBody = document.getElementById('pm2HistoryBody');
+                document.getElementById('pm2HistoryCount').textContent = history.length;
+                if (history.length === 0) {
+                    histBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #64748b;">No trade history</td></tr>';
+                } else {
+                    histBody.innerHTML = history.map(h => {
+                        const histLink = h.url ? `<a href="${h.url}" target="_blank" style="color: #60a5fa; text-decoration: none;" title="${h.question}">${h.question.slice(0, 35)}...</a>` : `${h.question.slice(0, 35)}...`;
+                        return `<tr>
+                            <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${histLink}</td>
+                            <td style="color: ${h.side === 'YES' ? '#4ade80' : '#f87171'}">${h.side}</td>
+                            <td>${h.entryPrice.toFixed(1)}c</td>
+                            <td>${h.exitPrice}c</td>
+                            <td style="color: ${h.profit >= 0 ? '#4ade80' : '#f87171'}">${h.profit >= 0 ? '+' : ''}$${h.profit.toFixed(2)}</td>
+                            <td style="color: ${h.result === 'WIN' ? '#4ade80' : '#f87171'}">${h.result}</td>
+                        </tr>`;
+                    }).join('');
+                }
+
+                // Logs
+                const logBox = document.getElementById('pm2LogBox');
+                if (logs.length === 0) {
+                    logBox.innerHTML = '<div class="pm2-log-line">No logs available</div>';
+                } else {
+                    logBox.innerHTML = logs.map(line => {
+                        let cls = '';
+                        if (line.includes('BUY') || line.includes('WIN')) cls = 'buy';
+                        else if (line.includes('INFO')) cls = 'info';
+                        else if (line.includes('ERROR')) cls = 'error';
+                        else if (line.includes('LOSS')) cls = 'loss';
+                        return `<div class="pm2-log-line ${cls}">${line}</div>`;
+                    }).join('');
+                    logBox.scrollTop = logBox.scrollHeight;
+                }
+
+                // Last update
+                document.getElementById('pm2LastUpdate').textContent = new Date().toLocaleString();
+            },
+
+            async refresh() {
+                const result = await this.fetchData();
+                this.updateUI(result);
+            },
+
+            init() {
+                this.refresh();
+                setInterval(() => this.refresh(), 10000); // Refresh every 10 seconds
+            }
+        };
+
+        // Initialize PM2 Status
+        PM2Status.init();
 
         // Initial load
         fetchMarkets();

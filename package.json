@@ -12,7 +12,14 @@
     "paper-trading:logs": "pm2 logs paper-trading",
     "paper-trading:status": "pm2 status"
   },
-  "keywords": ["polymarket", "prediction-markets", "dashboard"],
+  "keywords": [
+    "polymarket",
+    "prediction-markets",
+    "dashboard"
+  ],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^8.19.0"
+  }
 }
