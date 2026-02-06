@@ -819,10 +819,10 @@
                     <div style="max-height: 300px; overflow-y: auto;">
                     <table class="pm2-positions-table">
                         <thead>
-                            <tr><th>Market</th><th>Side</th><th>Entry</th><th>Exit</th><th>P/L</th><th>Result</th></tr>
+                            <tr><th>Market</th><th>Side</th><th>Entry</th><th>Exit</th><th>P/L</th><th>Result</th><th>Entry Time</th><th>End Date</th></tr>
                         </thead>
                         <tbody id="pm2HistoryBody">
-                            <tr><td colspan="6" style="text-align: center; color: #64748b;">No trade history</td></tr>
+                            <tr><td colspan="8" style="text-align: center; color: #64748b;">No trade history</td></tr>
                         </tbody>
                     </table>
                     </div>
@@ -2180,6 +2180,8 @@
                 } else {
                     histBody.innerHTML = history.map(h => {
                         const histLink = h.url ? `<a href="${h.url}" target="_blank" style="color: #60a5fa; text-decoration: none;" title="${h.question}">${h.question.slice(0, 35)}...</a>` : `${h.question.slice(0, 35)}...`;
+                        const entryTime = h.entryTime ? new Date(h.entryTime).toLocaleString() : '-';
+                        const endDate = h.endDate ? new Date(h.endDate).toLocaleString() : '-';
                         return `<tr>
                             <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${histLink}</td>
                             <td style="color: ${h.side === 'YES' ? '#4ade80' : '#f87171'}">${h.side}</td>
@@ -2187,6 +2189,8 @@
                             <td>${h.exitPrice}c</td>
                             <td style="color: ${h.profit >= 0 ? '#4ade80' : '#f87171'}">${h.profit >= 0 ? '+' : ''}$${h.profit.toFixed(2)}</td>
                             <td style="color: ${h.result === 'WIN' ? '#4ade80' : '#f87171'}">${h.result}</td>
+                            <td style="font-size: 0.75rem; color: #94a3b8;">${entryTime}</td>
+                            <td style="font-size: 0.75rem; color: #94a3b8;">${endDate}</td>
                         </tr>`;
                     }).join('');
                 }
